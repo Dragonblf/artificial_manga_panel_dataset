@@ -3,14 +3,13 @@ import concurrent.futures
 import zipfile
 import time
 import shutil
-from PIL import Image, ImageFont, ImageDraw
 import dask.dataframe as dd
 import itertools
 from fontTools.ttLib import TTFont
-from fontTools.unicode import Unicode
 from fontTools.ttLib import TTLibError
 from tqdm import tqdm
 from . import config_file as cfg
+from pathlib import Path
 
 
 def unzip_file(paths):
@@ -24,7 +23,7 @@ def unzip_file(paths):
         zip_ref.extractall(paths[1])
 
 
-def extract_fonts():
+def extract_fonts(fonts_zip_output, fonts_raw_dir):
     """
     A function to get the font files which are in zip format and
     extract them
@@ -34,12 +33,11 @@ def extract_fonts():
 
     files = os.listdir(fonts_raw_dir)
     files = [filename for filename in files if filename.endswith(".zip")]
-    filepaths = [(fonts_raw_dir+filename, fonts_zip_output)
+    filepaths = [(fonts_raw_dir + filename, fonts_zip_output)
                  for filename in files]
 
-    # A fun expeirment with multiprocessing
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        results = executor.map(unzip_file, filepaths)
+        executor.map(unzip_file, filepaths)
 
 
 def move_files(paths):
@@ -50,10 +48,12 @@ def move_files(paths):
 
     :type paths: list
     """
-    shutil.move(paths[0], paths[1])
+    filepath = str(paths[0])
+    if not os.path.isfile(filepath):
+        shutil.move(filepath, paths[1])
 
 
-def get_font_files(fonts_zip_output, fonts_raw_dir, font_file_dir):
+def move_fonts(fonts_zip_output, fonts_raw_dir, font_file_dir):
     """
     A function to find the .otf and .ttf
     font files from the scraped font files
@@ -75,18 +75,16 @@ def get_font_files(fonts_zip_output, fonts_raw_dir, font_file_dir):
     # Get all relevant font files
     print("Finding font files")
     font_files = list(Path(fonts_zip_output).rglob("*.[tT][tT][fF]"))
-    font_files += list(Path(fonts_raw_dir).rglob("*.[tT][tT][fF]"))
     font_files += list(Path(fonts_zip_output).rglob("*.[oO][tT][fF]"))
+    font_files += list(Path(fonts_raw_dir).rglob("*.[tT][tT][fF]"))
     font_files += list(Path(fonts_raw_dir).rglob("*.[oO][tT][fF]"))
-
-    if not os.path.isdir(font_file_dir):
-        os.mkdir(font_file_dir)
 
     font_files_and_paths = [(font_path, font_file_dir)
                             for font_path in font_files]
+
     print("Moving font files")
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        executor.map(move_files, font_files_and_paths)
+    for path in font_files_and_paths:
+        move_files(path)
 
     # Clean up the folder
     shutil.rmtree(fonts_zip_output)
