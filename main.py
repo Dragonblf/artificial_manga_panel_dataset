@@ -4,25 +4,22 @@ from scraping.download_images import download_db_illustrations
 
 from preprocesing.text_dataset_format_changer import convert_jesc_to_dataframe
 from preprocesing.extract_and_verify_fonts import (
-                                                   extract_fonts,
-                                                   get_font_files,
-                                                   verify_font_files
-                                                   )
+    extract_fonts,
+    move_fonts,
+    verify_font_files
+)
 from preprocesing.convert_images import convert_images_to_bw
 from preprocesing.layout_engine.page_creator import render_pages
 from preprocesing.layout_engine.page_dataset_creator import (
-                                                        create_page_metadata
-                                                        )
+    create_page_metadata
+)
 from tqdm import tqdm
 import os
 import pandas as pd
 from argparse import ArgumentParser
 import pytest
 
-import time
-
 if __name__ == '__main__':
-
     usage_message = """
                     This file is designed you to create the AMP dataset
                     To learn more about how to use this open the README.md
@@ -33,15 +30,22 @@ if __name__ == '__main__':
     parser.add_argument("--download_jesc", "-dj",
                         action="store_true",
                         help="Download JESC Japanese/English dialogue corpus")
+
     parser.add_argument("--download_fonts", "-df",
                         action="store_true",
                         help="Scrape font files")
+
     parser.add_argument("--download_images", "-di",
                         action="store_true",
                         help="Download anime illustrtations from Kaggle")
+
     parser.add_argument("--download_speech_bubbles", "-ds",
                         action="store_true",
                         help="Download speech bubbles from Gcloud")
+
+    parser.add_argument("--extract_fonts", "-ef",
+                        action="store_true",
+                        help="Extract and move fonts from datasets/font_dataset/font_file_raw_downloads/ to datasets/font_dataset/font_files")
 
     parser.add_argument("--verify_fonts", "-vf",
                         action="store_true",
@@ -51,6 +55,10 @@ if __name__ == '__main__':
                         action="store_true",
                         help="Convert downloaded images to black and white")
 
+    parser.add_argument("--make_dirs", "-mk",
+                        action="store_true",
+                        help="Create all dataset folders")
+
     parser.add_argument("--create_page_metadata", "-pm", nargs=1, type=int)
     parser.add_argument("--render_pages", "-rp", action="store_true")
     parser.add_argument("--generate_pages", "-gp", nargs=1, type=int)
@@ -59,34 +67,58 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # Wrangling with the text dataset
+    metadata_folder = "datasets/page_metadata/"
+    images_folder = "datasets/page_images/"
+    images_path = "datasets/image_dataset/"
+    font_dataset_path = "datasets/font_dataset/"
+    text_dataset_path = "datasets/text_dataset/"
+    fonts_raw_dir = font_dataset_path + "font_file_raw_downloads/"
+    fonts_zip_output = font_dataset_path + "fonts_zip_output/"
+    font_file_dir = font_dataset_path + "font_files/"
+    dataframe_file = text_dataset_path + "jesc_dialogues"
+    metadata_folder = "datasets/page_metadata/"
+    image_dir_path = images_path + "db_illustrations_bw/"
+    speech_bubbles_path = "datasets/speech_bubbles_dataset/"
+    speech_bubbles_files_path = speech_bubbles_path + "files/"
+    tagged_images_path = images_path + "tagged-anime-illustrations/"
+    danbooru_images_path = tagged_images_path + "danbooru-images/danbooru-images/"
+
+    if args.make_dirs:
+        paths = [metadata_folder,
+                 images_folder,
+                 images_path,
+                 font_dataset_path,
+                 text_dataset_path,
+                 fonts_raw_dir,
+                 fonts_zip_output,
+                 font_file_dir,
+                 dataframe_file,
+                 metadata_folder,
+                 image_dir_path,
+                 speech_bubbles_path,
+                 tagged_images_path,
+                 danbooru_images_path]
+
+        for path in paths:
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+        # Wrangling with the text dataset
     if args.download_jesc:
         download_and_extract_jesc()
         convert_jesc_to_dataframe()
 
     # Font dataset
-    # TODO: Add an automatic scraper
     if args.download_fonts:
         get_font_links()
-        print("Please run scraping/font_download_manual.ipynb" +
-              " and download fonts manually from the links" +
-              "that were scraped then place them in" +
-              "datasets/font_dataset/font_file_raw_downloads/")
-
-        print("NOTE: There's no need to extract them this program does that")
 
     # Font verification
+    if args.extract_fonts:
+        extract_fonts(fonts_zip_output, fonts_raw_dir)
+        move_fonts(fonts_zip_output, fonts_raw_dir, font_file_dir)
+
     if args.verify_fonts:
-
-        font_dataset_path = "datasets/font_dataset/"
-        text_dataset_path = "datasets/text_dataset/"
-        fonts_raw_dir = font_dataset_path+"font_file_raw_downloads/"
-        fonts_zip_output = font_dataset_path+"fonts_zip_output/"
-        font_file_dir = font_dataset_path+"font_files/"
-        dataframe_file = text_dataset_path+"jesc_dialogues"
         render_text_test_file = font_dataset_path + "render_test_text.txt"
-
-        # extract_fonts()
         verify_font_files(
             dataframe_file,
             render_text_test_file,
@@ -104,31 +136,24 @@ if __name__ == '__main__':
 
     # Page creation
     if args.create_page_metadata is not None:
-        metadata_folder = "datasets/page_metadata/"
         if not os.path.isdir(metadata_folder) and not args.dry:
             os.mkdir(metadata_folder)
 
         # number of pages
         n = args.create_page_metadata[0]
         print("Loading files")
-        image_dir_path = "datasets/image_dataset/db_illustrations_bw/"
         image_dir = os.listdir(image_dir_path)
+        text_dataset = pd.read_parquet(text_dataset_path + "jesc_dialogues")
 
-        text_dataset = pd.read_parquet("datasets/text_dataset/jesc_dialogues")
-
-        speech_bubbles_path = "datasets/speech_bubbles_dataset/"
-
-        speech_bubble_files = os.listdir(speech_bubbles_path+"/files/")
-        speech_bubble_files = [speech_bubbles_path+"files/"+filename
+        speech_bubble_files = os.listdir(speech_bubbles_files_path)
+        speech_bubble_files = [speech_bubbles_files_path + filename
                                for filename in speech_bubble_files
                                ]
 
         speech_bubble_tags = pd.read_csv(speech_bubbles_path +
                                          "writing_area_labels.csv")
-        font_files_path = "datasets/font_dataset/"
         viable_font_files = []
-        with open(font_files_path+"viable_fonts.csv") as viable_fonts:
-
+        with open(font_dataset_path + "viable_fonts.csv") as viable_fonts:
             for line in viable_fonts.readlines():
                 path, viable = line.split(",")
                 viable = viable.replace("\n", "")
@@ -147,9 +172,6 @@ if __name__ == '__main__':
             page.dump_data(metadata_folder, dry=args.dry)
 
     if args.render_pages:
-
-        metadata_folder = "datasets/page_metadata/"
-        images_folder = "datasets/page_images/"
         if not os.path.isdir(metadata_folder):
             print("There is no metadata please generate metadata first")
         else:
@@ -164,29 +186,22 @@ if __name__ == '__main__':
         # number of pages
         n = args.generate_pages[0]
 
-        metadata_folder = "datasets/page_metadata/"
         if not os.path.isdir(metadata_folder) and not args.dry:
             os.mkdir(metadata_folder)
 
         print("Loading files")
-        image_dir_path = "datasets/image_dataset/db_illustrations_bw/"
         image_dir = os.listdir(image_dir_path)
+        text_dataset = pd.read_parquet(text_dataset_path + "jesc_dialogues")
 
-        text_dataset = pd.read_parquet("datasets/text_dataset/jesc_dialogues")
-
-        speech_bubbles_path = "datasets/speech_bubbles_dataset/"
-
-        speech_bubble_files = os.listdir(speech_bubbles_path+"/files/")
-        speech_bubble_files = [speech_bubbles_path+"files/"+filename
+        speech_bubble_files = os.listdir(speech_bubbles_files_path)
+        speech_bubble_files = [speech_bubbles_files_path + filename
                                for filename in speech_bubble_files
                                ]
 
         speech_bubble_tags = pd.read_csv(speech_bubbles_path +
                                          "writing_area_labels.csv")
-        font_files_path = "datasets/font_dataset/"
         viable_font_files = []
-        with open(font_files_path+"viable_fonts.csv") as viable_fonts:
-
+        with open(font_dataset_path + "viable_fonts.csv") as viable_fonts:
             for line in viable_fonts.readlines():
                 path, viable = line.split(",")
                 viable = viable.replace("\n", "")
@@ -207,7 +222,6 @@ if __name__ == '__main__':
         if not os.path.isdir(metadata_folder):
             print("There is no metadata please generate metadata first")
         else:
-            images_folder = "datasets/page_images/"
             if not os.path.isdir(images_folder) and not args.dry:
                 os.mkdir(images_folder)
 
@@ -216,7 +230,7 @@ if __name__ == '__main__':
 
     if args.run_tests:
         pytest.main([
-                "tests/unit_tests/",
-                "-s",
-                "-x",
-                ])
+            "tests/unit_tests/",
+            "-s",
+            "-x",
+        ])
