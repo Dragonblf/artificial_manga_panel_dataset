@@ -31,13 +31,12 @@ def download_db_illustrations():
     print("Finished downloading now unzipping")
     output_dir = "datasets/image_dataset/tagged-anime-illustrations/"
 
-    if not os.path.isdir(output_dir):
-        os.mkdir(output_dir)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
     os.system("unzip -o "+zip_file + " -d "+output_dir)
     print("Finished unzipping")
 
 
 def download_speech_bubbles():
-
     pass
