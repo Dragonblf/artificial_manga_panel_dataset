@@ -10,11 +10,11 @@ import uuid
 
 from .page_object_classes import Panel, Page, SpeechBubble
 from .helpers import (
-                      invert_for_next, choose, choose_and_return_other,
-                      get_min_area_panels, get_leaf_panels,
-                      find_parent_with_multiple_children,
-                      move_children_to_line
-                      )
+    invert_for_next, choose, choose_and_return_other,
+    get_min_area_panels, get_leaf_panels,
+    find_parent_with_multiple_children,
+    move_children_to_line
+)
 from .. import config_file as cfg
 
 
@@ -785,8 +785,8 @@ def box_transform_panels(page, type_choice=None, pattern=None):
                         trapezoid_pattern = pattern
 
                     movement_proportion = np.random.randint(
-                                            10,
-                                            cfg.trapezoid_movement_limit)
+                        10,
+                        cfg.trapezoid_movement_limit)
 
                     # If parent panel is horizontal the children are vertical
                     if panel.orientation == "h":
@@ -987,9 +987,9 @@ def box_transform_panels(page, type_choice=None, pattern=None):
                         rhombus_pattern = pattern
 
                     movement_proportion = np.random.randint(
-                                            10,
-                                            cfg.rhombus_movement_limit
-                                            )
+                        10,
+                        cfg.rhombus_movement_limit
+                    )
 
                     # Logic for the section below is the same as the
                     # trapezoid with the exception of the fact that the
@@ -1158,9 +1158,9 @@ def box_transform_page(page, direction_list=[]):
             p2 = page.get_child(idx+1)
 
             change_proportion = np.random.randint(
-                                    10,
-                                    cfg.full_page_movement_proportion_limit
-                                    )
+                10,
+                cfg.full_page_movement_proportion_limit
+            )
 
             change_proportion /= 100
 
@@ -1488,9 +1488,9 @@ def create_single_panel_metadata(panel,
 
         # Select a speech bubble and get it's writing areas
         speech_bubble_file_idx = np.random.randint(
-                                    0,
-                                    speech_bubble_dataset_len
-                                    )
+            0,
+            speech_bubble_dataset_len
+        )
 
         speech_bubble_file = speech_bubble_files[speech_bubble_file_idx]
 
@@ -1860,8 +1860,8 @@ def get_base_panels(num_panels=0,
                 # Pick one of all of them and divide into two
                 page_child_chosen = np.random.choice(page.children)
                 choice_idx, left_choices = choose_and_return_other(
-                                                    page_child_chosen
-                                                    )
+                    page_child_chosen
+                )
 
                 choice = page_child_chosen.get_child(choice_idx)
 
@@ -1962,9 +1962,9 @@ def get_base_panels(num_panels=0,
                     choice_min = round((100/n)*0.5)
                     for i in range(0, n):
                         shift_choice = np.random.randint(
-                                                choice_min,
-                                                choice_max
-                                                )
+                            choice_min,
+                            choice_max
+                        )
 
                         choice_max = choice_max + ((100/n) - shift_choice)
                         shifts.append(shift_choice)
@@ -2170,9 +2170,9 @@ def get_base_panels(num_panels=0,
                         choice_min = round((100/n)*0.5)
                         for i in range(0, n):
                             shift_choice = np.random.randint(
-                                            choice_min,
-                                            choice_max
-                                            )
+                                choice_min,
+                                choice_max
+                            )
 
                             choice_max = choice_max + ((100/n) - shift_choice)
                             shifts.append(shift_choice)
@@ -2223,9 +2223,9 @@ def get_base_panels(num_panels=0,
                     choice_min = round((100/n)*0.5)
                     for i in range(0, n):
                         shift_choice = np.random.randint(
-                                            choice_min,
-                                            choice_max
-                                            )
+                            choice_min,
+                            choice_max
+                        )
 
                         choice_max = choice_max + ((100/n) - shift_choice)
                         shifts.append(shift_choice)

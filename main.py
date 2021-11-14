@@ -8,7 +8,7 @@ from preprocesing.extract_and_verify_fonts import (
     move_fonts,
     verify_font_files
 )
-from preprocesing.convert_images import convert_images_to_bw
+from preprocesing.convert_images import convert_images_to_bw, split_speech_bubbles
 from preprocesing.layout_engine.page_creator import render_pages
 from preprocesing.layout_engine.page_dataset_creator import (
     create_page_metadata
@@ -55,6 +55,10 @@ if __name__ == '__main__':
                         action="store_true",
                         help="Convert downloaded images to black and white")
 
+    parser.add_argument("--split_speech_bubbles", "-ssb",
+                        action="store_true",
+                        help="Convert downloaded images to black and white")
+
     parser.add_argument("--make_dirs", "-mk",
                         action="store_true",
                         help="Create all dataset folders")
@@ -79,6 +83,7 @@ if __name__ == '__main__':
     metadata_folder = "datasets/page_metadata/"
     image_dir_path = images_path + "db_illustrations_bw/"
     speech_bubbles_path = "datasets/speech_bubbles_dataset/"
+    speech_bubbles_raw_files_path = speech_bubbles_path + "raw_files/"
     speech_bubbles_files_path = speech_bubbles_path + "files/"
     tagged_images_path = images_path + "tagged-anime-illustrations/"
     danbooru_images_path = tagged_images_path + "danbooru-images/danbooru-images/"
@@ -96,6 +101,7 @@ if __name__ == '__main__':
                  metadata_folder,
                  image_dir_path,
                  speech_bubbles_path,
+                 speech_bubbles_raw_files_path,
                  speech_bubbles_files_path,
                  tagged_images_path,
                  danbooru_images_path]
@@ -134,6 +140,10 @@ if __name__ == '__main__':
 
     if args.convert_images:
         convert_images_to_bw()
+
+    if args.split_speech_bubbles:
+        split_speech_bubbles(speech_bubbles_raw_files_path,
+                             speech_bubbles_files_path)
 
     # Page creation
     if args.create_page_metadata is not None:
