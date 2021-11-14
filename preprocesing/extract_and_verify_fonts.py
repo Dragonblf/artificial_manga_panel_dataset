@@ -1,7 +1,6 @@
 import os
 import concurrent.futures
 import zipfile
-import time
 import shutil
 import dask.dataframe as dd
 import itertools
@@ -134,7 +133,7 @@ def create_character_test_string(dataframe_file, render_text_test_file):
     char_set = list(set(agg_chars))
     test_string = " ".join(char_set)
     print("Writing file")
-    with open(render_text_test_file, "w+") as wf:
+    with open(render_text_test_file, "w+", encoding="utf-8") as wf:
         wf.write(test_string)
 
 
@@ -179,7 +178,7 @@ def verify_font_files(dataframe_file,
     # File to create a test string of unique chars in the
     # corpus
     test_string = ""
-    with open(render_text_test_file, "r") as test_file:
+    with open(render_text_test_file, "r", encoding="utf-8") as test_file:
         test_string = test_file.readlines()[0]
 
     chars = test_string.split(" ")

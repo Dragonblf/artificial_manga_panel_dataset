@@ -96,6 +96,7 @@ if __name__ == '__main__':
                  metadata_folder,
                  image_dir_path,
                  speech_bubbles_path,
+                 speech_bubbles_files_path,
                  tagged_images_path,
                  danbooru_images_path]
 
@@ -103,7 +104,7 @@ if __name__ == '__main__':
             if not os.path.exists(path):
                 os.makedirs(path)
 
-        # Wrangling with the text dataset
+    # Wrangling with the text dataset
     if args.download_jesc:
         download_and_extract_jesc()
         convert_jesc_to_dataframe()
