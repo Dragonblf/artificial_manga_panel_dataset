@@ -18,7 +18,13 @@ import os
 import pandas as pd
 from argparse import ArgumentParser
 import pytest
-from PIL import features
+
+
+def _makeDirs(dirs):
+    for path in dirs:
+        if not os.path.exists(path):
+            os.makedirs(path)
+
 
 if __name__ == '__main__':
     usage_message = """
@@ -71,8 +77,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    metadata_folder = "datasets/page_metadata/"
-    images_folder = "datasets/page_images/"
     images_path = "datasets/image_dataset/"
     font_dataset_path = "datasets/font_dataset/"
     text_dataset_path = "datasets/text_dataset/"
@@ -80,7 +84,6 @@ if __name__ == '__main__':
     fonts_zip_output = font_dataset_path + "fonts_zip_output/"
     font_file_dir = font_dataset_path + "font_files/"
     dataframe_file = text_dataset_path + "jesc_dialogues"
-    metadata_folder = "datasets/page_metadata/"
     image_dir_path = images_path + "db_illustrations_bw/"
     speech_bubbles_path = "datasets/speech_bubbles_dataset/"
     speech_bubbles_raw_files_path = speech_bubbles_path + "raw_files/"
@@ -88,27 +91,26 @@ if __name__ == '__main__':
     tagged_images_path = images_path + "tagged-anime-illustrations/"
     danbooru_images_path = tagged_images_path + "danbooru-images/danbooru-images/"
 
-    if args.make_dirs:
-        paths = [metadata_folder,
-                 images_folder,
-                 images_path,
-                 font_dataset_path,
-                 text_dataset_path,
-                 fonts_raw_dir,
-                 fonts_zip_output,
-                 font_file_dir,
-                 dataframe_file,
-                 metadata_folder,
-                 image_dir_path,
-                 speech_bubbles_path,
-                 speech_bubbles_raw_files_path,
-                 speech_bubbles_files_path,
-                 tagged_images_path,
-                 danbooru_images_path]
+    generated_folder = "generated/"
+    generated_images_folder = generated_folder + "images/"
+    generated_metadata_folder = generated_folder + "metadata/"
 
-        for path in paths:
-            if not os.path.exists(path):
-                os.makedirs(path)
+    if args.make_dirs:
+        paths = [
+            images_path,
+            font_dataset_path,
+            text_dataset_path,
+            fonts_raw_dir,
+            fonts_zip_output,
+            font_file_dir,
+            dataframe_file,
+            image_dir_path,
+            speech_bubbles_path,
+            speech_bubbles_raw_files_path,
+            speech_bubbles_files_path,
+            tagged_images_path,
+            danbooru_images_path]
+        _makeDirs(paths)
 
     # Wrangling with the text dataset
     if args.download_jesc:
@@ -164,6 +166,7 @@ if __name__ == '__main__':
 
         # speech_bubble_tags = pd.read_csv(speech_bubbles_path +
         #                                  "writing_area_labels.csv")
+        _makeDirs([generated_metadata_folder, generated_images_folder])
         viable_font_files = []
         with open(font_dataset_path + "viable_fonts.csv") as viable_fonts:
             for line in viable_fonts.readlines():
@@ -181,16 +184,17 @@ if __name__ == '__main__':
                                         speech_bubble_files,
                                         # speech_bubble_tags
                                         )
-            page.dump_data(metadata_folder, dry=False)
+            page.dump_data(generated_metadata_folder, dry=False)
 
-        if not os.path.isdir(metadata_folder):
+        if not os.path.isdir(generated_metadata_folder):
             print("There is no metadata please generate metadata first")
         else:
-            if not os.path.isdir(images_folder) and not args.dry:
-                os.mkdir(images_folder)
+            if not os.path.isdir(generated_images_folder) and not args.dry:
+                os.mkdir(generated_images_folder)
 
             print("Loading metadata and rendering")
-            render_pages(metadata_folder, images_folder, dry=args.dry)
+            render_pages(generated_metadata_folder,
+                         generated_images_folder, dry=args.dry)
 
     if args.run_tests:
         pytest.main([
