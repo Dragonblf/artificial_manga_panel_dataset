@@ -1,5 +1,4 @@
 import numpy as np
-import random
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import json
 import uuid
@@ -204,15 +203,15 @@ class Panel(object):
 
         speech_bubbles = [bubble.dump_data() for bubble in self.speech_bubbles]
         data = dict(
-                name=self.name,
-                coordinates=self.coords,
-                orientation=self.orientation,
-                children=children_rec,
-                non_rect=self.non_rect,
-                sliced=self.sliced,
-                no_render=self.no_render,
-                image=self.image,
-                speech_bubbles=speech_bubbles
+            name=self.name,
+            coordinates=self.coords,
+            orientation=self.orientation,
+            children=children_rec,
+            non_rect=self.non_rect,
+            sliced=self.sliced,
+            no_render=self.no_render,
+            image=self.image,
+            speech_bubbles=speech_bubbles
         )
 
         return data
@@ -237,19 +236,19 @@ class Panel(object):
 
                 transform_metadata = speech_bubble['transform_metadata']
                 bubble = SpeechBubble(
-                            texts=speech_bubble['texts'],
-                            text_indices=speech_bubble['text_indices'],
-                            font=speech_bubble['font'],
-                            speech_bubble=speech_bubble['speech_bubble'],
-                            writing_areas=speech_bubble['writing_areas'],
-                            resize_to=speech_bubble['resize_to'],
-                            location=speech_bubble['location'],
-                            width=speech_bubble['width'],
-                            height=speech_bubble['height'],
-                            transforms=speech_bubble['transforms'],
-                            transform_metadata=transform_metadata,
-                            text_orientation=speech_bubble['text_orientation']
-                            )
+                    texts=speech_bubble['texts'],
+                    text_indices=speech_bubble['text_indices'],
+                    font=speech_bubble['font'],
+                    speech_bubble=speech_bubble['speech_bubble'],
+                    writing_areas=speech_bubble['writing_areas'],
+                    resize_to=speech_bubble['resize_to'],
+                    location=speech_bubble['location'],
+                    width=speech_bubble['width'],
+                    height=speech_bubble['height'],
+                    transforms=speech_bubble['transforms'],
+                    transform_metadata=transform_metadata,
+                    text_orientation=speech_bubble['text_orientation']
+                )
 
                 self.speech_bubbles.append(bubble)
 
@@ -385,7 +384,6 @@ class Page(Panel):
             return json.dumps(data, indent=2)
 
     def load_data(self, filename):
-
         """
         This method reverses the dump_data function and
         load's the metadata of the page from the JSON
@@ -410,19 +408,19 @@ class Page(Panel):
                     text_orientation = speech_bubble['text_orientation']
                     transform_metadata = speech_bubble['transform_metadata']
                     bubble = SpeechBubble(
-                                texts=speech_bubble['texts'],
-                                text_indices=speech_bubble['text_indices'],
-                                font=speech_bubble['font'],
-                                speech_bubble=speech_bubble['speech_bubble'],
-                                writing_areas=speech_bubble['writing_areas'],
-                                resize_to=speech_bubble['resize_to'],
-                                location=speech_bubble['location'],
-                                width=speech_bubble['width'],
-                                height=speech_bubble['height'],
-                                transforms=speech_bubble['transforms'],
-                                transform_metadata=transform_metadata,
-                                text_orientation=text_orientation
-                                )
+                        texts=speech_bubble['texts'],
+                        text_indices=speech_bubble['text_indices'],
+                        font=speech_bubble['font'],
+                        speech_bubble=speech_bubble['speech_bubble'],
+                        writing_areas=speech_bubble['writing_areas'],
+                        resize_to=speech_bubble['resize_to'],
+                        location=speech_bubble['location'],
+                        width=speech_bubble['width'],
+                        height=speech_bubble['height'],
+                        transforms=speech_bubble['transforms'],
+                        transform_metadata=transform_metadata,
+                        text_orientation=text_orientation
+                    )
 
                     self.speech_bubbles.append(bubble)
 
@@ -609,6 +607,7 @@ class SpeechBubble(object):
 
     :type text_orientation: str, optional
     """
+
     def __init__(self,
                  texts,
                  text_indices,
@@ -650,14 +649,14 @@ class SpeechBubble(object):
                 "rotate",
                 "stretch x",
                 "stretch y",
-                ]
+            ]
             # 1 in 50 chance of no transformation
             if np.random.rand() < 0.98:
                 self.transforms = list(np.random.choice(
-                                            possible_transforms,
-                                            2
-                                            )
-                                       )
+                    possible_transforms,
+                    2
+                )
+                )
 
                 # 1 in 20 chance of inversion
                 if np.random.rand() < 0.05:
@@ -874,7 +873,7 @@ class SpeechBubble(object):
             max_x = px_width - 20
             max_y = px_height - 20
 
-            text = self.texts[i]['Japanese']
+            text = self.texts[i]['English']
             text = text+text+text+text+text
             text_segments = [text]
             size = font.getsize(text)
@@ -967,11 +966,16 @@ class SpeechBubble(object):
                     ry = ((cby + (len(text_segments)*size[1])/2) -
                           ((len(text_segments) - i)*size[1]))
 
+                # write.text((rx, ry),
+                #            text,
+                #            font=font,
+                #            fill=fill_type,
+                #            direction=self.text_orientation)
                 write.text((rx, ry),
                            text,
                            font=font,
-                           fill=fill_type,
-                           direction=self.text_orientation)
+                           align='center',
+                           fill=fill_type)
 
         # reisize bubble
         aspect_ratio = h/w

@@ -1,12 +1,9 @@
+import cv2
 import numpy as np
 import math
-import time
-from copy import deepcopy
 import random
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 import pyclipper
-import json
-import uuid
 
 from .page_object_classes import Panel, Page, SpeechBubble
 from .helpers import (
@@ -1418,7 +1415,7 @@ def create_single_panel_metadata(panel,
                                  font_files,
                                  text_dataset,
                                  speech_bubble_files,
-                                 speech_bubble_tags,
+                                 #  speech_bubble_tags,
                                  minimum_speech_bubbles=0
                                  ):
     """
@@ -1494,15 +1491,25 @@ def create_single_panel_metadata(panel,
 
         speech_bubble_file = speech_bubble_files[speech_bubble_file_idx]
 
-        area_idx = speech_bubble_tags['imagename'] == speech_bubble_file
-        speech_bubble_writing_area = speech_bubble_tags[area_idx]['label']
-        speech_bubble_writing_area = speech_bubble_writing_area.values[0]
-        speech_bubble_writing_area = json.loads(speech_bubble_writing_area)
+        # area_idx = speech_bubble_tags['imagename'] == speech_bubble_file
+        # speech_bubble_writing_area = speech_bubble_writing_area.values[0]
+        # speech_bubble_writing_area = json.loads(speech_bubble_writing_area)
+
+        img = cv2.imread(speech_bubble_file)
+        w, h, _ = img.shape
+        speech_bubble_writing_area = [{
+            "x": 0,
+            "y": 0,
+            "width":  w,
+            "height": h,
+            "original_width":  w,
+            "original_height": h,
+        }]
 
         # Select text for writing areas
         texts = []
         text_indices = []
-        for i in range(len(speech_bubble_writing_area)):
+        for _ in speech_bubble_writing_area:
             text_idx = np.random.randint(0, text_dataset_len)
             text_indices.append(text_idx)
             text = text_dataset.iloc[text_idx].to_dict()
@@ -1551,7 +1558,7 @@ def populate_panels(page,
                     font_files,
                     text_dataset,
                     speech_bubble_files,
-                    speech_bubble_tags,
+                    # speech_bubble_tags,
                     minimum_speech_bubbles=0
                     ):
     """
@@ -1609,7 +1616,7 @@ def populate_panels(page,
                                          font_files,
                                          text_dataset,
                                          speech_bubble_files,
-                                         speech_bubble_tags,
+                                         #  speech_bubble_tags,
                                          minimum_speech_bubbles
                                          )
     else:
@@ -1619,7 +1626,7 @@ def populate_panels(page,
                                      font_files,
                                      text_dataset,
                                      speech_bubble_files,
-                                     speech_bubble_tags,
+                                     #  speech_bubble_tags,
                                      minimum_speech_bubbles
                                      )
     return page
@@ -2248,7 +2255,8 @@ def create_page_metadata(image_dir,
                          font_files,
                          text_dataset,
                          speech_bubble_files,
-                         speech_bubble_tags):
+                         #  speech_bubble_tags
+                         ):
     """
     This function creates page metadata for a single page. It includes
     transforms, background addition, random panel removal,
@@ -2297,7 +2305,6 @@ def create_page_metadata(image_dir,
 
     # Select number of panels on the page
     # between 1 and 8
-
     number_of_panels = np.random.choice(
         list(cfg.num_pages_ratios.keys()),
         p=list(cfg.num_pages_ratios.values())
@@ -2315,7 +2322,7 @@ def create_page_metadata(image_dir,
                            font_files,
                            text_dataset,
                            speech_bubble_files,
-                           speech_bubble_tags
+                           #    speech_bubble_tags
                            )
 
     if np.random.random() < cfg.panel_removal_chance:

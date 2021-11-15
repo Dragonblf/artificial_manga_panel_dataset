@@ -18,6 +18,7 @@ import os
 import pandas as pd
 from argparse import ArgumentParser
 import pytest
+from PIL import features
 
 if __name__ == '__main__':
     usage_message = """
@@ -63,7 +64,6 @@ if __name__ == '__main__':
                         action="store_true",
                         help="Create all dataset folders")
 
-    parser.add_argument("--create_page_metadata", "-pm", nargs=1, type=int)
     parser.add_argument("--render_pages", "-rp", action="store_true")
     parser.add_argument("--generate_pages", "-gp", nargs=1, type=int)
     parser.add_argument("--dry", action="store_true", default=False)
@@ -145,60 +145,13 @@ if __name__ == '__main__':
         split_speech_bubbles(speech_bubbles_raw_files_path,
                              speech_bubbles_files_path)
 
-    # Page creation
-    if args.create_page_metadata is not None:
-        if not os.path.isdir(metadata_folder) and not args.dry:
-            os.mkdir(metadata_folder)
-
-        # number of pages
-        n = args.create_page_metadata[0]
-        print("Loading files")
-        image_dir = os.listdir(image_dir_path)
-        text_dataset = pd.read_parquet(text_dataset_path + "jesc_dialogues")
-
-        speech_bubble_files = os.listdir(speech_bubbles_files_path)
-        speech_bubble_files = [speech_bubbles_files_path + filename
-                               for filename in speech_bubble_files
-                               ]
-
-        speech_bubble_tags = pd.read_csv(speech_bubbles_path +
-                                         "writing_area_labels.csv")
-        viable_font_files = []
-        with open(font_dataset_path + "viable_fonts.csv") as viable_fonts:
-            for line in viable_fonts.readlines():
-                path, viable = line.split(",")
-                viable = viable.replace("\n", "")
-                if viable == "True":
-                    viable_font_files.append(path)
-
-        print("Running creation of metadata")
-        for i in tqdm(range(n)):
-            page = create_page_metadata(image_dir,
-                                        image_dir_path,
-                                        viable_font_files,
-                                        text_dataset,
-                                        speech_bubble_files,
-                                        speech_bubble_tags
-                                        )
-            page.dump_data(metadata_folder, dry=args.dry)
-
-    if args.render_pages:
-        if not os.path.isdir(metadata_folder):
-            print("There is no metadata please generate metadata first")
-        else:
-            if not os.path.isdir(images_folder) and not args.dry:
-                os.mkdir(images_folder)
-
-            print("Loading metadata and rendering")
-            render_pages(metadata_folder, images_folder, dry=args.dry)
-
     # Combines the above in case of small size
     if args.generate_pages is not None:
-        # number of pages
-        n = args.generate_pages[0]
+        # if not features.check('raqm'):
+        #     raise Exception(
+        #         "Libraqm is required for rendering CJK text properly. Follow instructions https://github.com/HOST-Oman/libraqm")
 
-        if not os.path.isdir(metadata_folder) and not args.dry:
-            os.mkdir(metadata_folder)
+        n = args.generate_pages[0]  # number of pages
 
         print("Loading files")
         image_dir = os.listdir(image_dir_path)
@@ -209,8 +162,8 @@ if __name__ == '__main__':
                                for filename in speech_bubble_files
                                ]
 
-        speech_bubble_tags = pd.read_csv(speech_bubbles_path +
-                                         "writing_area_labels.csv")
+        # speech_bubble_tags = pd.read_csv(speech_bubbles_path +
+        #                                  "writing_area_labels.csv")
         viable_font_files = []
         with open(font_dataset_path + "viable_fonts.csv") as viable_fonts:
             for line in viable_fonts.readlines():
@@ -226,7 +179,7 @@ if __name__ == '__main__':
                                         viable_font_files,
                                         text_dataset,
                                         speech_bubble_files,
-                                        speech_bubble_tags
+                                        # speech_bubble_tags
                                         )
             page.dump_data(metadata_folder, dry=False)
 
