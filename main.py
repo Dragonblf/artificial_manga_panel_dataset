@@ -1,3 +1,8 @@
+import pytest
+from argparse import ArgumentParser
+import pandas as pd
+import os
+from tqdm import tqdm
 from scraping.download_texts import download_and_extract_jesc
 from scraping.download_fonts import get_font_links
 from scraping.download_images import download_db_illustrations
@@ -9,21 +14,16 @@ from preprocesing.extract_and_verify_fonts import (
     verify_font_files
 )
 from preprocesing.convert_images import convert_images_to_bw, split_speech_bubbles
-from preprocesing.layout_engine.page_creator import render_pages
-from preprocesing.layout_engine.page_dataset_creator import (
-    create_page_metadata
-)
-from tqdm import tqdm
-import os
-import pandas as pd
-from argparse import ArgumentParser
-import pytest
+from preprocesing.layout_engine.page_creator import render_pages, render_pages_from_files
+from preprocesing.layout_engine.page_dataset_creator import create_page_metadata
 
 
-def _makeDirs(dirs):
+def _makeDirs(dirs, remove=False):
     for path in dirs:
         if not os.path.exists(path):
             os.makedirs(path)
+        elif(remove):
+            os.remove(path)
 
 
 if __name__ == '__main__':
@@ -166,7 +166,8 @@ if __name__ == '__main__':
 
         # speech_bubble_tags = pd.read_csv(speech_bubbles_path +
         #                                  "writing_area_labels.csv")
-        _makeDirs([generated_metadata_folder, generated_images_folder])
+        _makeDirs([generated_metadata_folder,
+                  generated_images_folder])
         viable_font_files = []
         with open(font_dataset_path + "viable_fonts.csv") as viable_fonts:
             for line in viable_fonts.readlines():
@@ -176,6 +177,7 @@ if __name__ == '__main__':
                     viable_font_files.append(path)
 
         print("Running creation of metadata")
+        pages = []
         for i in tqdm(range(n)):
             page = create_page_metadata(image_dir,
                                         image_dir_path,
@@ -185,6 +187,7 @@ if __name__ == '__main__':
                                         # speech_bubble_tags
                                         )
             page.dump_data(generated_metadata_folder, dry=False)
+            pages.append(page)
 
         if not os.path.isdir(generated_metadata_folder):
             print("There is no metadata please generate metadata first")
@@ -193,8 +196,9 @@ if __name__ == '__main__':
                 os.mkdir(generated_images_folder)
 
             print("Loading metadata and rendering")
-            render_pages(generated_metadata_folder,
-                         generated_images_folder, dry=args.dry)
+            render_pages(pages, generated_images_folder, dry=args.dry)
+            # render_pages_from_files(generated_metadata_folder,
+            #                         generated_images_folder, dry=args.dry)
 
     if args.run_tests:
         pytest.main([

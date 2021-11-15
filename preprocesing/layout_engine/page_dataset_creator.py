@@ -1416,7 +1416,8 @@ def create_single_panel_metadata(panel,
                                  text_dataset,
                                  speech_bubble_files,
                                  #  speech_bubble_tags,
-                                 minimum_speech_bubbles=0
+                                 minimum_speech_bubbles=0,
+                                 speech_bubbles_generated=[],
                                  ):
     """
     This is a helper function that populates a single panel with
@@ -1470,6 +1471,7 @@ def create_single_panel_metadata(panel,
     # Select number of speech bubbles to assign to panel
     num_speech_bubbles = np.random.randint(minimum_speech_bubbles,
                                            cfg.max_speech_bubbles_per_panel)
+    # num_speech_bubbles = math.floor(panel.area / 500000)
 
     # Get lengths of datasets
     text_dataset_len = len(text_dataset)
@@ -1496,7 +1498,7 @@ def create_single_panel_metadata(panel,
         # speech_bubble_writing_area = json.loads(speech_bubble_writing_area)
 
         img = cv2.imread(speech_bubble_file)
-        w, h, _ = img.shape
+        h, w, _ = img.shape
         speech_bubble_writing_area = [{
             "x": 0,
             "y": 0,
@@ -1535,21 +1537,33 @@ def create_single_panel_metadata(panel,
             y_choice
         ]
 
-        speech_bubble_img = Image.open(speech_bubble_file)
-        w, h = speech_bubble_img.size
-        # Create speech bubble
-        speech_bubble = SpeechBubble(texts=texts,
-                                     text_indices=text_indices,
-                                     font=font,
-                                     speech_bubble=speech_bubble_file,
-                                     writing_areas=speech_bubble_writing_area,
-                                     resize_to=new_area,
-                                     location=location,
-                                     width=w,
-                                     height=h,
-                                     )
+        isAbleToGenerate = True
+        
+        #Validate if there is not any speech bubble in the same space
+        for bubble in speech_bubbles_generated:
+            width, height = bubble.width, bubble.height
+            x1, y1, = bubble.location[0], bubble.location[1]
+            x2, y2 = x1 + width, y1 + height
 
-        panel.speech_bubbles.append(speech_bubble)
+            if x_choice >= x1 and x_choice + w <= x2 | y_choice >= y1 and y_choice + h <= y2:
+                isAbleToGenerate = False
+                break
+
+        # Create speech bubble
+        if isAbleToGenerate:
+            speech_bubble = SpeechBubble(texts=texts,
+                                         text_indices=text_indices,
+                                         font=font,
+                                         speech_bubble=speech_bubble_file,
+                                         writing_areas=speech_bubble_writing_area,
+                                         resize_to=new_area,
+                                         location=location,
+                                         width=w,
+                                         height=h,
+                                         )
+
+            speech_bubbles_generated.append(speech_bubble)
+            panel.speech_bubbles.append(speech_bubble)
 
 
 def populate_panels(page,
@@ -1607,6 +1621,7 @@ def populate_panels(page,
 
     :rtype: Page
     """
+    speech_bubbles_generated = []
 
     if page.num_panels > 1:
         for child in page.leaf_children:
@@ -1617,7 +1632,8 @@ def populate_panels(page,
                                          text_dataset,
                                          speech_bubble_files,
                                          #  speech_bubble_tags,
-                                         minimum_speech_bubbles
+                                         minimum_speech_bubbles,
+                                         speech_bubbles_generated
                                          )
     else:
         create_single_panel_metadata(page,
@@ -1627,7 +1643,8 @@ def populate_panels(page,
                                      text_dataset,
                                      speech_bubble_files,
                                      #  speech_bubble_tags,
-                                     minimum_speech_bubbles
+                                     minimum_speech_bubbles,
+                                     speech_bubbles_generated
                                      )
     return page
 
