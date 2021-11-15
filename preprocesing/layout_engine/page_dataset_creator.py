@@ -1463,10 +1463,9 @@ def create_single_panel_metadata(panel,
     """
 
     # Image to be used inside panel
-    image_dir_len = len(image_dir)
-    select_image_idx = np.random.randint(0, image_dir_len)
+    select_image_idx = np.random.randint(0, len(image_dir))
     select_image = image_dir[select_image_idx]
-    panel.image = image_dir_path+select_image
+    panel.image = image_dir_path + select_image
 
     # Select number of speech bubbles to assign to panel
     num_speech_bubbles = np.random.randint(minimum_speech_bubbles,
@@ -1479,8 +1478,7 @@ def create_single_panel_metadata(panel,
     speech_bubble_dataset_len = len(speech_bubble_files)
 
     # Associated speech bubbles
-    for speech_bubble in range(num_speech_bubbles):
-
+    def create_speech_bubble():
         # Select a font
         font_idx = np.random.randint(0, font_dataset_len)
         font = font_files[font_idx]
@@ -1537,15 +1535,16 @@ def create_single_panel_metadata(panel,
             y_choice
         ]
 
+        # Validate if there is not any speech bubble in the same space
+        def rectInRect(r1x, r1y, r1w, r1h, r2x, r2y, r2w, r2h):
+            return r1x + r1w >= r2x and r1x <= r2x + r2w and r1y + r1h >= r2y and r1y <= r2y + r2h
+
         isAbleToGenerate = True
-        
-        #Validate if there is not any speech bubble in the same space
         for bubble in speech_bubbles_generated:
             width, height = bubble.width, bubble.height
             x1, y1, = bubble.location[0], bubble.location[1]
-            x2, y2 = x1 + width, y1 + height
 
-            if x_choice >= x1 and x_choice + w <= x2 | y_choice >= y1 and y_choice + h <= y2:
+            if rectInRect(x1, y1, width, height, x_choice, y_choice, w, h):
                 isAbleToGenerate = False
                 break
 
@@ -1561,12 +1560,19 @@ def create_single_panel_metadata(panel,
                                          width=w,
                                          height=h,
                                          )
-
             speech_bubbles_generated.append(speech_bubble)
             panel.speech_bubbles.append(speech_bubble)
+            return speech_bubble
+
+    for _ in range(num_speech_bubbles):
+        attempts = 5
+        for __ in range(attempts):
+            speech_bubble = create_speech_bubble()
+            if speech_bubble is not None:
+                break
 
 
-def populate_panels(page,
+def populate_panels(page: Page,
                     image_dir,
                     image_dir_path,
                     font_files,
