@@ -116,7 +116,7 @@ def make_char_list(row):
     return all_chars
 
 
-def create_character_test_string(render_text_test_file):
+def create_japanese_test_characters(render_text_test_file):
     """
     Create a string of the unique characters in the
     japanese text corpus to test whether the fonts being
@@ -134,13 +134,13 @@ def create_character_test_string(render_text_test_file):
     agg_chars = list(itertools.chain.from_iterable(char_lists))
     print("Aggregation done. Now making a set")
     char_set = list(set(agg_chars))
-    test_string = " ".join(char_set)
+    japanese_test_characters = " ".join(char_set)
     print("Writing file")
     with open(render_text_test_file, "w+", encoding="utf-8") as wf:
-        wf.write(test_string)
+        wf.write(japanese_test_characters)
 
 
-def has_glyph(font, glyph):
+def contains_char(font, glyph):
     """
     Check if a font file has the character
     glyph specified
@@ -153,7 +153,7 @@ def has_glyph(font, glyph):
 
     :type glyph: str
 
-    :return: 0 or 1 as a yes or no
+    :return: 0 = False. 1 = False
 
     :rtype: int
     """
@@ -172,20 +172,22 @@ def verify_font_files():
     """
     if not os.path.isfile(paths.DATASET_FONTS_RENDER_TEST_FILE):
         print("Character test string does exist. Generating!")
-        create_character_test_string(paths.DATASET_FONTS_RENDER_TEST_FILE)
+        create_japanese_test_characters(paths.DATASET_FONTS_RENDER_TEST_FILE)
 
-    # File to create a test string of unique chars in the
-    # corpus
-    test_string = ""
+    # File to create a test string of unique chars in the corpus
+    japanese_test_characters = ""
+    english_test_characters = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz"
+    # spanish_test_characters = english_test_characters + "ÁáÉéÍíÓóÚú"
     with open(paths.DATASET_FONTS_RENDER_TEST_FILE, "r", encoding="utf-8") as test_file:
-        test_string = test_file.readlines()[0]
-
-    chars = test_string.split(" ")
+        japanese_test_characters = test_file.readlines()[0]
     all_fonts = os.listdir(paths.DATASET_FONTS_FILES_FOLDER)
 
-    total_chars = len(chars)
+    english_chars = list(english_test_characters)
+    japanese_chars = japanese_test_characters.split(" ")
+    japanese_total_chars = len(japanese_chars)
+    english_total_chars = len(english_chars)
 
-    coverages = []
+    fonts_coverage = []
     print("Verifying fonts")
     for font_name in tqdm(all_fonts):
         if font_name == ".DS_Store":
@@ -196,20 +198,24 @@ def verify_font_files():
         except TTLibError as e:
             print(font_path)
 
-        has_glyph_list = []
-        for char in chars:
-            has_glyph_list.append(has_glyph(font, char))
+        english_char_count = 0
+        japanese_char_count = 0
+        for char in japanese_chars:
+            japanese_char_count += contains_char(font, char)
+        for char in english_chars:
+            english_char_count += contains_char(font, char)
 
-        coverage = sum(has_glyph_list)/total_chars
-        coverages.append([font_path, coverage])
+        japanese_coverage = japanese_char_count / japanese_total_chars
+        english_coverage = english_char_count / english_total_chars
+        fonts_coverage.append([font_path, japanese_coverage, english_coverage])
 
-    print("Writing viability to file:",
-          paths.DATASET_FONTS_VIABLE_FONTS_FILE)
+    print("Writing viability to file: ", paths.DATASET_FONTS_VIABLE_FONTS_FILE)
     with open(paths.DATASET_FONTS_VIABLE_FONTS_FILE, "w+") as viable_font_file:
-        for font in coverages:
-            # Coverge %
-            if font[1] > cfg.font_character_coverage:
-                viable = True
-            else:
-                viable = False
-            viable_font_file.write(font[0] + ","+str(viable)+"\n")
+        for font in fonts_coverage:
+            print(font[1:])
+            coverage_states = []
+            for coverage in font[1:]:
+                coverage_states.append(
+                    str(coverage > cfg.font_character_coverage))
+            viable_font_file.write(
+                font[0] + "," + ",".join(coverage_states) + "\n")
