@@ -931,10 +931,9 @@ class SpeechBubble(object):
         self.location = (x1, y1)
 
         # Perform rotation if it was in transforms
-        # TODO: Fix issue of bad crops with rotation
-        # if "rotate" in self.transforms:
-        #     rotation = self.transform_metadata['rotation_amount']
-        #     bubble = bubble.rotate(rotation)
-        #     mask = mask.rotate(rotation)
+        if "rotate" in self.transforms:
+            rotation = self.transform_metadata['rotation_amount']
+            bubble = bubble.rotate(rotation, Image.NEAREST, expand=1)
+            mask = mask.rotate(rotation, Image.NEAREST, expand=1)
 
         return transforms_applied, bubble, mask, self.location
