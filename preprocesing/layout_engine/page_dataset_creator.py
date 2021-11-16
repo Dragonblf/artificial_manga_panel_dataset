@@ -2,11 +2,12 @@ import cv2
 import numpy as np
 import math
 import random
-from PIL import Image
 import pyclipper
 
 from .. import config_file as cfg
-from .objects import Panel, Page, SpeechBubble
+from .objects.panel import Panel
+from .objects.page import Page
+from .objects.speech_bubble import SpeechBubble
 from .helpers import (
     invert_for_next, choose, choose_and_return_other,
     get_min_area_panels, get_leaf_panels,
@@ -1470,7 +1471,6 @@ def create_single_panel_metadata(panel,
     # Select number of speech bubbles to assign to panel
     num_speech_bubbles = np.random.randint(minimum_speech_bubbles,
                                            cfg.max_speech_bubbles_per_panel)
-    # num_speech_bubbles = math.floor(panel.area / 500000)
 
     # Get lengths of datasets
     text_dataset_len = len(text_dataset)
@@ -1489,12 +1489,8 @@ def create_single_panel_metadata(panel,
             speech_bubble_dataset_len
         )
 
+        # Open image and save its dimensions
         speech_bubble_file = speech_bubble_files[speech_bubble_file_idx]
-
-        # area_idx = speech_bubble_tags['imagename'] == speech_bubble_file
-        # speech_bubble_writing_area = speech_bubble_writing_area.values[0]
-        # speech_bubble_writing_area = json.loads(speech_bubble_writing_area)
-
         img = cv2.imread(speech_bubble_file)
         h, w, _ = img.shape
         speech_bubble_writing_area = [{
@@ -1502,8 +1498,6 @@ def create_single_panel_metadata(panel,
             "y": 0,
             "width":  w,
             "height": h,
-            "original_width":  w,
-            "original_height": h,
         }]
 
         # Select text for writing areas
@@ -1515,11 +1509,12 @@ def create_single_panel_metadata(panel,
             text = text_dataset.iloc[text_idx].to_dict()
             texts.append(text)
 
-        # resize bubble to < 40% of panel area
-        max_area = panel.area * cfg.bubble_to_panel_area_max_ratio
-        new_area = np.random.random()*(max_area - (max_area * 0.375))
-        new_area = max_area - new_area
-        scale_to = new_area / panel.area
+        # Scale bubble to < 40% of panel area
+        bubble_area = h * w
+        scale = np.sqrt(
+            panel.area * cfg.bubble_to_panel_area_max_ratio / bubble_area)
+        w = round(w * scale)
+        h = round(h * scale)
 
         # Select location of bubble in panel
         width_m = np.random.random()
@@ -1528,37 +1523,33 @@ def create_single_panel_metadata(panel,
         xy = np.array(panel.coords)
         min_coord = np.min(xy[xy[:, 0] == np.min(xy[:, 0])], 0)
 
-        x_choice = round(min_coord[0] + (panel.width//2 - 15)*width_m)
-        y_choice = round(min_coord[1] + (panel.height//2 - 15)*height_m)
+        x = round(min_coord[0] + (panel.width // 2 - 15) * width_m)
+        y = round(min_coord[1] + (panel.height // 2 - 15) * height_m)
 
-        location = [
-            x_choice,
-            y_choice
-        ]
-
-        # Validate if there is not any speech bubble in the same space
-        def rectInRect(r1x, r1y, r1w, r1h, r2x, r2y, r2w, r2h):
+        # Validate if there is not any speech bubble in the same space or outside page
+        def rect_in_rect(r1x, r1y, r1w, r1h, r2x, r2y, r2w, r2h):
             return r1x + r1w >= r2x and r1x <= r2x + r2w and r1y + r1h >= r2y and r1y <= r2y + r2h
 
-        isAbleToGenerate = True
-        for bubble in speech_bubbles_generated:
-            width, height = bubble.width, bubble.height
-            x1, y1, = bubble.location[0], bubble.location[1]
+        is_able_to_generate = x >= 0 and y >= 0 and x + \
+            w <= cfg.page_width and y + h <= cfg.page_height
 
-            if rectInRect(x1, y1, width, height, x_choice, y_choice, w, h):
-                isAbleToGenerate = False
-                break
+        if is_able_to_generate:
+            for bubble in speech_bubbles_generated:
+                width, height = bubble.width, bubble.height
+                x1, y1, = bubble.location[0], bubble.location[1]
+
+                if rect_in_rect(x1, y1, width, height, x, y, w, h):
+                    is_able_to_generate = False
+                    break
 
         # Create speech bubble
-        if isAbleToGenerate:
+        if is_able_to_generate:
             speech_bubble = SpeechBubble(texts=texts,
                                          text_indices=text_indices,
                                          font=font,
                                          speech_bubble=speech_bubble_file,
                                          writing_areas=speech_bubble_writing_area,
-                                         resize_to=new_area,
-                                         scale_to=scale_to,
-                                         location=location,
+                                         location=(x, y),
                                          width=w,
                                          height=h,
                                          )
