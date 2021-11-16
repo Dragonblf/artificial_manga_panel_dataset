@@ -2,25 +2,23 @@ import pytest
 import json
 import pandas as pd
 import os
+import paths
 
-from preprocesing.layout_engine.page_object_classes import (
-                                Page, Panel, SpeechBubble
-                                )
+from preprocesing.layout_engine.page_object_classes import Page
 from preprocesing.layout_engine.page_dataset_creator import (
-                                get_base_panels, populate_panels
-                                )
-from preprocesing.layout_engine.helpers import get_leaf_panels
+    get_base_panels, populate_panels
+)
 
 
 @pytest.fixture(scope="module")
 def data_files():
 
-    image_dir_path = "datasets/image_dataset/db_illustrations_bw/"
+    image_dir_path = paths.DATASET_IMAGES_FOLDER
     image_dir = os.listdir(image_dir_path)
 
-    text_dataset = pd.read_parquet("datasets/text_dataset/jesc_dialogues")
+    text_dataset = pd.read_parquet(paths.DATASET_TEXT_JESC_DIALOGUES_FOLDER)
 
-    speech_bubbles_path = "datasets/speech_bubbles_dataset/"
+    speech_bubbles_path = paths.DATASET_IMAGES_SPEECH_BUBBLES_FOLDER
 
     speech_bubble_files = os.listdir(speech_bubbles_path+"/files/")
     speech_bubble_files = [speech_bubbles_path+"files/"+filename
@@ -30,9 +28,9 @@ def data_files():
     speech_bubble_tags = pd.read_csv(speech_bubbles_path +
                                      "writing_area_labels.csv")
 
-    font_files_path = "datasets/font_dataset/"
+    font_files_path = paths.DATASET_FONTS_FOLDER
     viable_font_files = []
-    with open(font_files_path+"viable_fonts.csv") as viable_fonts:
+    with open(paths.DATASET_FONTS_VIABLE_FONTS_FILE) as viable_fonts:
 
         for line in viable_fonts.readlines():
             path, viable = line.split(",")

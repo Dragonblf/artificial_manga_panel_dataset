@@ -1,7 +1,4 @@
 import numpy as np
-import math
-import random
-from PIL import Image, ImageDraw, ImageFont
 
 
 def crop_image_only_outside(img, tol=0):

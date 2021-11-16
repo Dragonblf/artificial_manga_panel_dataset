@@ -2,10 +2,11 @@ import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 import os
+import paths
 
-preview_page_file = "datasets/font_dataset/browse_links.txt"
-font_links_file = "datasets/font_dataset/font_links.txt"
-font_file_raw_downloads = "datasets/font_dataset/font_file_raw_downloads/"
+preview_page_file = paths.DATASET_FONTS_FOLDER + "browse_links.txt"
+font_links_file = paths.DATASET_FONTS_FOLDER + "font_links.txt"
+font_file_raw_downloads = paths.DATASET_FONTS_DOWNLOADS_FOLDER
 
 
 def get_browse_page_links():

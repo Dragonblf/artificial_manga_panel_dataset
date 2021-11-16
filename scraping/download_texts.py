@@ -1,9 +1,9 @@
 # Download dataset JESC from website and extract it
 import requests
 import os
-import sys
 from tqdm import tqdm
 import tarfile
+import paths
 
 
 def download_file(url, filepath):
@@ -44,14 +44,14 @@ def download_and_extract_jesc():
     and places it into datasets/text_dataset/
     """
     url = "https://nlp.stanford.edu/projects/jesc/data/raw.tar.gz"
-    filepath = "datasets/raw.tar.gz"
+    filepath = paths.DATASET_TEXT_RAW_JESC_DIALOGUES_FILE
     if os.path.isfile(filepath):
         print("File already exists")
     else:
         print("Downloading JESC text corpus")
-        downloaded_file = download_file(url, filepath)
+        download_file(url, filepath)
 
-    text_dataset_dir = "datasets/text_dataset/"
+    text_dataset_dir = paths.DATASET_TEXT_FOLDER
     if not os.path.isdir(text_dataset_dir):
         os.mkdir(text_dataset_dir)
 

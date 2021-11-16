@@ -1,5 +1,5 @@
 import os
-import json
+import paths
 
 
 def download_db_illustrations():
@@ -13,7 +13,7 @@ def download_db_illustrations():
                and add your kaggle credentials")
         return
 
-    zip_file = "datasets/image_dataset/tagged-anime-illustrations.zip"
+    zip_file = paths.DATASET_IMAGES_FOLDER + "tagged-anime-illustrations.zip"
     if not os.path.isfile(zip_file):
         os.environ['KAGGLE_CONFIG_DIR'] = "config/"
 
@@ -23,13 +23,13 @@ def download_db_illustrations():
 
         dataset = "mylesoneill/tagged-anime-illustrations"
         api.dataset_download_files(dataset,
-                                   path="datasets/image_dataset",
+                                   path=paths.DATASET_IMAGES_FOLDER,
                                    quiet=False,
                                    unzip=False
                                    )
 
     print("Finished downloading now unzipping")
-    output_dir = "datasets/image_dataset/tagged-anime-illustrations/"
+    output_dir = paths.DATASET_IMAGES_DANBOORU_IMAGES_FOLDER
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)

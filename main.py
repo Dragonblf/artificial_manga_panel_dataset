@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 import pandas as pd
 import os
 from tqdm import tqdm
+import paths
 from scraping.download_texts import download_and_extract_jesc
 from scraping.download_fonts import get_font_links
 from scraping.download_images import download_db_illustrations
@@ -16,14 +17,6 @@ from preprocesing.extract_and_verify_fonts import (
 from preprocesing.convert_images import convert_images_to_bw, split_speech_bubbles
 from preprocesing.layout_engine.page_creator import render_pages, render_pages_from_files
 from preprocesing.layout_engine.page_dataset_creator import create_page_metadata
-
-
-def _makeDirs(dirs, remove=False):
-    for path in dirs:
-        if not os.path.exists(path):
-            os.makedirs(path)
-        elif(remove):
-            os.remove(path)
 
 
 if __name__ == '__main__':
@@ -52,7 +45,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--extract_fonts", "-ef",
                         action="store_true",
-                        help="Extract and move fonts from datasets/font_dataset/font_file_raw_downloads/ to datasets/font_dataset/font_files")
+                        help="Extract and move fonts from " + paths.DATASET_FONTS_UNZIPPED_FOLDER + " to " + paths.DATASET_FONTS_FILES_FOLDER)
 
     parser.add_argument("--verify_fonts", "-vf",
                         action="store_true",
@@ -77,40 +70,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    images_path = "datasets/image_dataset/"
-    font_dataset_path = "datasets/font_dataset/"
-    text_dataset_path = "datasets/text_dataset/"
-    fonts_raw_dir = font_dataset_path + "font_file_raw_downloads/"
-    fonts_zip_output = font_dataset_path + "fonts_zip_output/"
-    font_file_dir = font_dataset_path + "font_files/"
-    dataframe_file = text_dataset_path + "jesc_dialogues"
-    image_dir_path = images_path + "db_illustrations_bw/"
-    speech_bubbles_path = "datasets/speech_bubbles_dataset/"
-    speech_bubbles_raw_files_path = speech_bubbles_path + "raw_files/"
-    speech_bubbles_files_path = speech_bubbles_path + "files/"
-    tagged_images_path = images_path + "tagged-anime-illustrations/"
-    danbooru_images_path = tagged_images_path + "danbooru-images/danbooru-images/"
-
-    generated_folder = "generated/"
-    generated_images_folder = generated_folder + "images/"
-    generated_metadata_folder = generated_folder + "metadata/"
-
     if args.make_dirs:
-        paths = [
-            images_path,
-            font_dataset_path,
-            text_dataset_path,
-            fonts_raw_dir,
-            fonts_zip_output,
-            font_file_dir,
-            dataframe_file,
-            image_dir_path,
-            speech_bubbles_path,
-            speech_bubbles_raw_files_path,
-            speech_bubbles_files_path,
-            tagged_images_path,
-            danbooru_images_path]
-        _makeDirs(paths)
+        paths.makeFolders(paths.DATASET_FOLDER_PATHS)
 
     # Wrangling with the text dataset
     if args.download_jesc:
@@ -123,17 +84,18 @@ if __name__ == '__main__':
 
     # Font verification
     if args.extract_fonts:
-        extract_fonts(fonts_zip_output, fonts_raw_dir)
-        move_fonts(fonts_zip_output, fonts_raw_dir, font_file_dir)
+        extract_fonts()
+        move_fonts()
 
     if args.verify_fonts:
-        render_text_test_file = font_dataset_path + "render_test_text.txt"
-        verify_font_files(
-            dataframe_file,
-            render_text_test_file,
-            font_file_dir,
-            font_dataset_path
-        )
+        verify_font_files()
+        # render_text_test_file = paths.DATASET_FONTS_FOLDER + "render_test_text.txt"
+        # verify_font_files(
+        #     paths.DATASET_TEXT_JESC_DIALOGUES_FOLDER,
+        #     render_text_test_file,
+        #     paths.DATASET_FONTS_FILES_FOLDER,
+        #     paths.DATASET_FONTS_FOLDER
+        # )
 
     # Download and convert image from Kaggle
     if args.download_images:
@@ -144,8 +106,7 @@ if __name__ == '__main__':
         convert_images_to_bw()
 
     if args.split_speech_bubbles:
-        split_speech_bubbles(speech_bubbles_raw_files_path,
-                             speech_bubbles_files_path)
+        split_speech_bubbles()
 
     # Combines the above in case of small size
     if args.generate_pages is not None:
@@ -156,20 +117,18 @@ if __name__ == '__main__':
         n = args.generate_pages[0]  # number of pages
 
         print("Loading files")
-        image_dir = os.listdir(image_dir_path)
-        text_dataset = pd.read_parquet(text_dataset_path + "jesc_dialogues")
+        image_dir = os.listdir(paths.DATASET_IMAGES_FILES_FOLDER)
+        text_dataset = pd.read_parquet(
+            paths.DATASET_TEXT_JESC_DIALOGUES_FOLDER)
 
-        speech_bubble_files = os.listdir(speech_bubbles_files_path)
-        speech_bubble_files = [speech_bubbles_files_path + filename
+        speech_bubble_files = os.listdir(
+            paths.DATASET_IMAGES_SPEECH_BUBBLES_FOLDER)
+        speech_bubble_files = [paths.DATASET_IMAGES_SPEECH_BUBBLES_FOLDER + filename
                                for filename in speech_bubble_files
                                ]
-
-        # speech_bubble_tags = pd.read_csv(speech_bubbles_path +
-        #                                  "writing_area_labels.csv")
-        _makeDirs([generated_metadata_folder,
-                  generated_images_folder])
+        paths.makeFolders(paths.GENERATED_FOLDER_PATHS)
         viable_font_files = []
-        with open(font_dataset_path + "viable_fonts.csv") as viable_fonts:
+        with open(paths.DATASET_FONTS_VIABLE_FONTS_FILE) as viable_fonts:
             for line in viable_fonts.readlines():
                 path, viable = line.split(",")
                 viable = viable.replace("\n", "")
@@ -180,25 +139,20 @@ if __name__ == '__main__':
         pages = []
         for i in tqdm(range(n)):
             page = create_page_metadata(image_dir,
-                                        image_dir_path,
+                                        paths.DATASET_IMAGES_FILES_FOLDER,
                                         viable_font_files,
                                         text_dataset,
-                                        speech_bubble_files,
-                                        # speech_bubble_tags
-                                        )
-            page.dump_data(generated_metadata_folder, dry=False)
+                                        speech_bubble_files)
+            page.dump_data(paths.GENERATED_METADATA_FOLDER, dry=False)
             pages.append(page)
 
-        if not os.path.isdir(generated_metadata_folder):
+        if not os.path.isdir(paths.GENERATED_METADATA_FOLDER):
             print("There is no metadata please generate metadata first")
+            if not args.dry:
+                os.mkdir(paths.GENERATED_IMAGES_FOLDER)
         else:
-            if not os.path.isdir(generated_images_folder) and not args.dry:
-                os.mkdir(generated_images_folder)
-
             print("Loading metadata and rendering")
-            render_pages(pages, generated_images_folder, dry=args.dry)
-            # render_pages_from_files(generated_metadata_folder,
-            #                         generated_images_folder, dry=args.dry)
+            render_pages(pages, paths.GENERATED_IMAGES_FOLDER, dry=args.dry)
 
     if args.run_tests:
         pytest.main([

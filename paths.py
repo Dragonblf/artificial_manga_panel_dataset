@@ -1,26 +1,57 @@
 import os
 
 # DATASET PATHS #
-dataset_folder = "dataset/"
-dataset_font_folder = dataset_folder + "fonts/"
-dataset_text_folder = dataset_folder + "texts/"
-dataset_images_folder = dataset_folder + "images/"
-dataset_text_jesc_dialogues_folder = dataset_text_folder + "jesc_dialogues"
-dataset_speech_bubbles_folder = "datasets/speech_bubbles/"
+DATASET_FOLDER = "dataset/"
 
-dataset_folder_paths = [dataset_font_folder, dataset_text_folder,
-                        dataset_images_folder, dataset_speech_bubbles_folder,
-                        dataset_text_jesc_dialogues_folder]
+# FONTS DATASET #
+DATASET_FONTS_FOLDER = DATASET_FOLDER + "fonts/"
+DATASET_FONTS_FILES_FOLDER = DATASET_FONTS_FOLDER + "files/"
+DATASET_FONTS_ZIPPED_FOLDER = DATASET_FONTS_FOLDER + "zipped/"
+DATASET_FONTS_UNZIPPED_FOLDER = DATASET_FONTS_FOLDER + "unzipped/"
+DATASET_FONTS_RENDER_TEST_FILE = DATASET_FONTS_FOLDER + "render_test_text.txt"
+DATASET_FONTS_VIABLE_FONTS_FILE = DATASET_FONTS_FOLDER + "viable_fonts.csv"
+DATASET_FONTS_DOWNLOADS_FOLDER = DATASET_FONTS_FOLDER + "donwloads/"
 
-# DATASET PATHS #
-generated_folder = "generated/"
-generated_images_folder = generated_folder + "images/"
-generated_metadata_folder = generated_folder + "metadata/"
+# TEXTS DATASET #
+DATASET_TEXT_FOLDER = DATASET_FOLDER + "texts/"
+# DATASET_TEXT_FILES_FOLDER = DATASET_TEXT_FOLDER + "files/"
+DATASET_TEXT_JESC_DIALOGUES_FOLDER = DATASET_TEXT_FOLDER + "jesc_dialogues/"
+DATASET_TEXT_RAW_JESC_DIALOGUES_FILE = DATASET_FOLDER + "raw.tar.gz"
 
-generated_folder_paths = [generated_metadata_folder, generated_images_folder]
+# IMAGES DATASET #
+DATASET_IMAGES_FOLDER = DATASET_FOLDER + "images/"
+DATASET_IMAGES_FILES_FOLDER = DATASET_IMAGES_FOLDER + "files/"
+DATASET_IMAGES_SPEECH_BUBBLES_FOLDER = DATASET_IMAGES_FOLDER + "speech_bubbles/"
+DATASET_IMAGES_UNSPLITTED_SPEECH_BUBBLES_FOLDER = DATASET_IMAGES_FOLDER + \
+    "unsplitted_speech_bubbles/"
+DATASET_IMAGES_DANBOORU_IMAGES_FOLDER = DATASET_IMAGES_FOLDER + "tagged-anime-illustrations/"\
+    "danbooru-images/danbooru-images/"
+
+DATASET_FOLDER_PATHS = [DATASET_FONTS_FOLDER,
+                        DATASET_FONTS_FILES_FOLDER,
+                        DATASET_FONTS_ZIPPED_FOLDER,
+                        DATASET_FONTS_UNZIPPED_FOLDER,
+                        DATASET_TEXT_FOLDER,
+                        # DATASET_TEXT_FILES_FOLDER,
+                        DATASET_TEXT_JESC_DIALOGUES_FOLDER,
+                        DATASET_IMAGES_FOLDER,
+                        DATASET_IMAGES_FILES_FOLDER,
+                        DATASET_IMAGES_SPEECH_BUBBLES_FOLDER,
+                        DATASET_IMAGES_UNSPLITTED_SPEECH_BUBBLES_FOLDER,
+                        DATASET_IMAGES_DANBOORU_IMAGES_FOLDER]
 
 
-def makeFolders(folders):
+# GENERATED PATHS #
+GENERATED_FOLDER = "generated/"
+GENERATED_IMAGES_FOLDER = GENERATED_FOLDER + "images/"
+GENERATED_METADATA_FOLDER = GENERATED_FOLDER + "metadata/"
+
+GENERATED_FOLDER_PATHS = [GENERATED_METADATA_FOLDER, GENERATED_IMAGES_FOLDER]
+
+
+def makeFolders(folders, remove=False):
     for path in folders:
         if not os.path.exists(path):
             os.makedirs(path)
+        elif(remove):
+            os.remove(path)

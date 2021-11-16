@@ -9,6 +9,7 @@ from fontTools.ttLib import TTLibError
 from tqdm import tqdm
 from . import config_file as cfg
 from pathlib import Path
+import paths
 
 
 def unzip_file(paths):
@@ -22,17 +23,17 @@ def unzip_file(paths):
         zip_ref.extractall(paths[1])
 
 
-def extract_fonts(fonts_zip_output, fonts_raw_dir):
+def extract_fonts():
     """
     A function to get the font files which are in zip format and
     extract them
     """
-    if not os.path.isdir(fonts_zip_output):
-        os.mkdir(fonts_zip_output)
+    if not os.path.isdir(paths.DATASET_FONTS_UNZIPPED_FOLDER):
+        os.mkdir(paths.DATASET_FONTS_UNZIPPED_FOLDER)
 
-    files = os.listdir(fonts_raw_dir)
+    files = os.listdir(paths.DATASET_FONTS_ZIPPED_FOLDER)
     files = [filename for filename in files if filename.endswith(".zip")]
-    filepaths = [(fonts_raw_dir + filename, fonts_zip_output)
+    filepaths = [(paths.DATASET_FONTS_ZIPPED_FOLDER + filename, paths.DATASET_FONTS_UNZIPPED_FOLDER)
                  for filename in files]
 
     with concurrent.futures.ProcessPoolExecutor() as executor:
@@ -52,33 +53,37 @@ def move_files(paths):
         shutil.move(filepath, paths[1])
 
 
-def move_fonts(fonts_zip_output, fonts_raw_dir, font_file_dir):
+def move_fonts():
     """
     A function to find the .otf and .ttf
     font files from the scraped font files
 
-    :param fonts_zip_output: Path for zip files
+    :param paths.DATASET_FONTS_UNZIPPED_FOLDER: Path for zip files
     of font files
 
-    :type fonts_zip_output: str
+    :type paths.DATASET_FONTS_UNZIPPED_FOLDER: str
 
-    :param fonts_raw_dir: Place where all the
+    :param paths.DATASET_FONTS_ZIPPED_FOLDER: Place where all the
     raw font files exist whether zipped or not
 
-    :type fonts_raw_dir: str
+    :type paths.DATASET_FONTS_ZIPPED_FOLDER: str
 
-    :param font_file_dir: Out directory for font files
+    :param paths.DATASET_FONTS_FILES_FOLDER: Out directory for font files
 
-    :type font_file_dir: str
+    :type paths.DATASET_FONTS_FILES_FOLDER: str
     """
     # Get all relevant font files
     print("Finding font files")
-    font_files = list(Path(fonts_zip_output).rglob("*.[tT][tT][fF]"))
-    font_files += list(Path(fonts_zip_output).rglob("*.[oO][tT][fF]"))
-    font_files += list(Path(fonts_raw_dir).rglob("*.[tT][tT][fF]"))
-    font_files += list(Path(fonts_raw_dir).rglob("*.[oO][tT][fF]"))
+    font_files = list(
+        Path(paths.DATASET_FONTS_UNZIPPED_FOLDER).rglob("*.[tT][tT][fF]"))
+    font_files += list(
+        Path(paths.DATASET_FONTS_UNZIPPED_FOLDER).rglob("*.[oO][tT][fF]"))
+    font_files += list(Path(paths.DATASET_FONTS_ZIPPED_FOLDER)
+                       .rglob("*.[tT][tT][fF]"))
+    font_files += list(Path(paths.DATASET_FONTS_ZIPPED_FOLDER)
+                       .rglob("*.[oO][tT][fF]"))
 
-    font_files_and_paths = [(font_path, font_file_dir)
+    font_files_and_paths = [(font_path, paths.DATASET_FONTS_FILES_FOLDER)
                             for font_path in font_files]
 
     print("Moving font files")
@@ -86,8 +91,8 @@ def move_fonts(fonts_zip_output, fonts_raw_dir, font_file_dir):
         move_files(path)
 
     # Clean up the folder
-    shutil.rmtree(fonts_zip_output)
-    shutil.rmtree(fonts_raw_dir)
+    shutil.rmtree(paths.DATASET_FONTS_UNZIPPED_FOLDER)
+    # shutil.rmtree(paths.DATASET_FONTS_ZIPPED_FOLDER)
 
 
 def make_char_list(row):
@@ -111,19 +116,17 @@ def make_char_list(row):
     return all_chars
 
 
-def create_character_test_string(dataframe_file, render_text_test_file):
+def create_character_test_string(render_text_test_file):
     """
     Create a string of the unique characters in the
     japanese text corpus to test whether the fonts being
     used can render enough of the text
 
     """
-    df = dd.read_parquet(dataframe_file)
+    df = dd.read_parquet(paths.DATASET_TEXT_JESC_DIALOGUES_FOLDER)
     print("Loaded DF. Now seperating word to characters")
-    char_sep = df['Japanese'].apply(make_char_list, meta=("Japanese",
-                                                          "object"
-                                                          )
-                                    )
+    char_sep = df['Japanese'].apply(
+        make_char_list, meta=("Japanese", "object"))
     char_sep = char_sep.compute()
     print("Char sep done. Starting making lists of characters")
     char_lists = char_sep.aggregate(lambda x: x.tolist())
@@ -160,29 +163,25 @@ def has_glyph(font, glyph):
     return 0
 
 
-def verify_font_files(dataframe_file,
-                      render_text_test_file,
-                      font_file_dir,
-                      font_dataset_path
-                      ):
+def verify_font_files():
     """
     A function that tests whether the font files
     that have been scraped meet the benchmark of
     rendering at least x% (as specififed in the config)
     of the unique characters in the text corpus
     """
-    if not os.path.isfile(render_text_test_file):
+    if not os.path.isfile(paths.DATASET_FONTS_RENDER_TEST_FILE):
         print("Character test string does exist. Generating!")
-        create_character_test_string(dataframe_file, render_text_test_file)
+        create_character_test_string(paths.DATASET_FONTS_RENDER_TEST_FILE)
 
     # File to create a test string of unique chars in the
     # corpus
     test_string = ""
-    with open(render_text_test_file, "r", encoding="utf-8") as test_file:
+    with open(paths.DATASET_FONTS_RENDER_TEST_FILE, "r", encoding="utf-8") as test_file:
         test_string = test_file.readlines()[0]
 
     chars = test_string.split(" ")
-    all_fonts = os.listdir(font_file_dir)
+    all_fonts = os.listdir(paths.DATASET_FONTS_FILES_FOLDER)
 
     total_chars = len(chars)
 
@@ -191,7 +190,7 @@ def verify_font_files(dataframe_file,
     for font_name in tqdm(all_fonts):
         if font_name == ".DS_Store":
             continue
-        font_path = font_file_dir + font_name
+        font_path = paths.DATASET_FONTS_FILES_FOLDER + font_name
         try:
             font = TTFont(font_path)
         except TTLibError as e:
@@ -204,8 +203,9 @@ def verify_font_files(dataframe_file,
         coverage = sum(has_glyph_list)/total_chars
         coverages.append([font_path, coverage])
 
-    print("Writing viability to file:", font_dataset_path+"viable_fonts.csv")
-    with open(font_dataset_path+"viable_fonts.csv", "w+") as viable_font_file:
+    print("Writing viability to file:",
+          paths.DATASET_FONTS_VIABLE_FONTS_FILE)
+    with open(paths.DATASET_FONTS_VIABLE_FONTS_FILE, "w+") as viable_font_file:
         for font in coverages:
             # Coverge %
             if font[1] > cfg.font_character_coverage:
