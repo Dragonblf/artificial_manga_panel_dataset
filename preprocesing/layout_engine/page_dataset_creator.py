@@ -5,14 +5,14 @@ import random
 from PIL import Image
 import pyclipper
 
-from .page_object_classes import Panel, Page, SpeechBubble
+from .. import config_file as cfg
+from .objects import Panel, Page, SpeechBubble
 from .helpers import (
     invert_for_next, choose, choose_and_return_other,
     get_min_area_panels, get_leaf_panels,
     find_parent_with_multiple_children,
     move_children_to_line
 )
-from .. import config_file as cfg
 
 
 # Creation helpers
@@ -1516,9 +1516,10 @@ def create_single_panel_metadata(panel,
             texts.append(text)
 
         # resize bubble to < 40% of panel area
-        max_area = panel.area*cfg.bubble_to_panel_area_max_ratio
-        new_area = np.random.random()*(max_area - max_area*0.375)
+        max_area = panel.area * cfg.bubble_to_panel_area_max_ratio
+        new_area = np.random.random()*(max_area - (max_area * 0.375))
         new_area = max_area - new_area
+        scale_to = new_area / panel.area
 
         # Select location of bubble in panel
         width_m = np.random.random()
@@ -1556,6 +1557,7 @@ def create_single_panel_metadata(panel,
                                          speech_bubble=speech_bubble_file,
                                          writing_areas=speech_bubble_writing_area,
                                          resize_to=new_area,
+                                         scale_to=scale_to,
                                          location=location,
                                          width=w,
                                          height=h,

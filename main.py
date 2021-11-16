@@ -130,9 +130,10 @@ if __name__ == '__main__':
         viable_font_files = []
         with open(paths.DATASET_FONTS_VIABLE_FONTS_FILE) as viable_fonts:
             for line in viable_fonts.readlines():
-                path, viable = line.split(",")
-                viable = viable.replace("\n", "")
-                if viable == "True":
+                path, japanese_viable, english_viable = line.split(",")
+                japanese_viable = japanese_viable.replace("\n", "")
+                english_viable = english_viable.replace("\n", "")
+                if japanese_viable == "True":
                     viable_font_files.append(path)
 
         print("Running creation of metadata")
