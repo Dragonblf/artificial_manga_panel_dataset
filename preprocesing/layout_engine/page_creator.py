@@ -30,7 +30,7 @@ def create_page(data):
     filename = images_path+page.name+cfg.output_format
     if not os.path.isfile(filename) and not dry:
         img = page.render(show=False)
-        img.save(filename)
+        img.convert("L").save(filename)
 
 
 def render_pages(pages, images_dir, dry=False):
