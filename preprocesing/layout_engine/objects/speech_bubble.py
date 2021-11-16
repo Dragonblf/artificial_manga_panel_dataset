@@ -72,7 +72,6 @@ class SpeechBubble(object):
                  font,
                  speech_bubble,
                  writing_areas,
-                 resize_to,
                  location,
                  width,
                  height,
@@ -91,7 +90,6 @@ class SpeechBubble(object):
         self.font = font
         self.speech_bubble = speech_bubble
         self.writing_areas = writing_areas
-        self.resize_to = resize_to
 
         # Location on panel
         self.location = location
@@ -172,7 +170,6 @@ class SpeechBubble(object):
             font_size=self.font_size,
             speech_bubble=self.speech_bubble,
             writing_areas=self.writing_areas,
-            resize_to=self.resize_to,
             location=self.location,
             width=self.width,
             height=self.height,
@@ -366,33 +363,8 @@ class SpeechBubble(object):
             bubble.paste(empty_image, (x, y), empty_image)
 
         # Resize bubble
-        # h, w = bubble.size
-        # aspect_ratio = h / w
-        # new_height = round(np.sqrt(self.resize_to / aspect_ratio))
-        # new_width = round(new_height * aspect_ratio)
-        # bubble = bubble.resize((new_width, new_height))
-        # mask = mask.resize((new_width, new_height))
-
-        # Resize bubble
-        # h, w = bubble.size
-        # bubble_area = h * w
-        # scale = np.sqrt(self.resize_to / bubble_area)
-        # new_height = round(h * scale)
-        # new_width = round(w * scale)
-        # bubble = bubble.resize((new_width, new_height))
-        # mask = mask.resize((new_width, new_height))
-
-        # Make sure bubble doesn't bleed the page
-        x1, y1 = self.location
-        x2 = x1 + bubble.size[0]
-        y2 = y1 + bubble.size[1]
-
-        if x2 > cfg.page_width:
-            x1 = x1 - (x2-cfg.page_width)
-        if y2 > cfg.page_height:
-            y1 = y1 - (y2-cfg.page_height)
-
-        self.location = (x1, y1)
+        bubble = bubble.resize((self.width, self.height))
+        mask = mask.resize((self.width, self.height))
 
         # Perform rotation if it was in transforms
         if "rotate" in self.transforms:
@@ -400,4 +372,4 @@ class SpeechBubble(object):
             bubble = bubble.rotate(rotation, Image.NEAREST, expand=1)
             mask = mask.rotate(rotation, Image.NEAREST, expand=1)
 
-        return transforms_applied, bubble, mask, self.location
+        return bubble, self.location

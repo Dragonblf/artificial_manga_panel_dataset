@@ -4,8 +4,8 @@ import json
 import uuid
 from ..helpers import crop_image_only_outside, get_leaf_panels
 from ... import config_file as cfg
-from panel import Panel
-from speech_bubble import SpeechBubble
+from .panel import Panel
+from .speech_bubble import SpeechBubble
 
 
 class Page(Panel):
@@ -263,21 +263,7 @@ class Page(Panel):
                 continue
             # For each bubble
             for sb in panel.speech_bubbles:
-                _, bubble, mask, location = sb.render()
-                # Slightly shift mask so that you get outline for bubbles
-                # new_mask_width = mask.size[0]+cfg.bubble_mask_x_increase
-                # new_mask_height = mask.size[1]+cfg.bubble_mask_y_increase
-                # bubble_mask = mask.resize((new_mask_width, new_mask_height))
-
-                # w, h = bubble.size
-                # crop_dims = (
-                #     0, 0,
-                #     w, h,
-                # )
-                # Uses a mask so that the "L" type bubble is cropped
-                # bubble_mask = bubble_mask.crop(crop_dims)
-                # page_img.paste(bubble, location, bubble_mask)
-                # Image.Image.paste(page_img, bubble, location)
+                bubble, location = sb.render()
                 page_img.paste(bubble, location, bubble)
 
         if show:

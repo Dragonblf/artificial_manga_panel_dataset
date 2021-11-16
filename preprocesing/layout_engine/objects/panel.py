@@ -1,6 +1,6 @@
 
 from ... import config_file as cfg
-from speech_bubble import SpeechBubble
+from .speech_bubble import SpeechBubble
 
 
 class Panel(object):

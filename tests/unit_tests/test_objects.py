@@ -4,7 +4,7 @@ import pandas as pd
 import os
 import paths
 
-from preprocesing.layout_engine.page_object_classes import Page
+from preprocesing.layout_engine.objects.page import Page
 from preprocesing.layout_engine.page_dataset_creator import (
     get_base_panels, populate_panels
 )
