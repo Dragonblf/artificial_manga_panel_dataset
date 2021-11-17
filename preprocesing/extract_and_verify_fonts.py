@@ -35,7 +35,7 @@ def extract_fonts():
                  for filename in files]
 
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        _ = list(tqdm(executor.map(unzip_file, filepaths)))
+        _ = list(tqdm(executor.map(unzip_file, filepaths), total=len(filepaths)))
 
 
 def move_files(paths):
@@ -72,7 +72,8 @@ def move_fonts():
 
     print("Moving fonts...")
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        _ = list(tqdm(executor.map(move_files, font_files_and_paths)))
+        _ = list(tqdm(executor.map(move_files, font_files_and_paths),
+                 total=len(font_files_and_paths)))
 
     # Clean up the folder
     # print("Deleting unzipped and zipped folders...")

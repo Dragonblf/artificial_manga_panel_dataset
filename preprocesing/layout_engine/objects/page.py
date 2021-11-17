@@ -116,7 +116,7 @@ class Page(Panel):
         )
 
         if not dry:
-            with open(dataset_path+self.name+".json", "w+") as json_file:
+            with open(dataset_path + self.name + cfg.metadata_format, "w+") as json_file:
                 json.dump(data, json_file, indent=2)
         else:
             return json.dumps(data, indent=2)

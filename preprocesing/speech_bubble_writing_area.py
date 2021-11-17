@@ -6,7 +6,6 @@ from tqdm import tqdm
 
 def get_largest_rectangle_inside_contours(img):
     """
-
     img: cv2.Image
 
     return: list of ((x1, y1), (x2, y2)) or None
@@ -85,7 +84,7 @@ def get_largest_rectangle_inside_contours(img):
 def create_speech_bubbles_writing_areas(save=True):
     file = paths.DATASET_IMAGES_SPEECH_BUBBLES_WRITING_AREAS_FILE
     folder = paths.DATASET_IMAGES_SPEECH_BUBBLES_FOLDER
-    rects_folder = paths.DATASET_IMAGES_SPEECH_BUBBLES_RECTS_FOLDER
+    rects_folder = paths.DATASET_IMAGES_SPEECH_BUBBLES_SEGMENTED_FOLDER
     speech_bubbles = os.listdir(folder)
     if os.path.exists(file):
         os.remove(file)
