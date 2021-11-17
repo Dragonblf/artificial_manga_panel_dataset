@@ -1490,21 +1490,18 @@ def create_single_panel_metadata(panel,
         )
 
         # Open image and save its dimensions
+        speech_bubble_writing_areas = []
         speech_bubble_file = speech_bubble_files[speech_bubble_file_idx]
         img = cv2.imread(speech_bubble_file)
         h, w, _ = img.shape
-        speech_bubble_writing_areas = []
 
         for area in writing_areas:
             if area["path"] == speech_bubble_file:
-                new_area = area
-                if(new_area["width"] <= 0):
-                    new_area["width"] = w
-                    new_area["x"] = 0
-                if(new_area["height"] <= 0):
-                    new_area["height"] = h
-                    new_area["y"] = 0
-                speech_bubble_writing_areas.append(new_area)
+                if area["width"] > 0 and area["height"] > 0:
+                    speech_bubble_writing_areas.append(area)
+
+        if not speech_bubble_writing_areas:
+            return
 
         # Select text for writing areas
         texts = []
@@ -1564,7 +1561,7 @@ def create_single_panel_metadata(panel,
             return speech_bubble
 
     for _ in range(num_speech_bubbles):
-        attempts = 5
+        attempts = 8
         for __ in range(attempts):
             speech_bubble = create_speech_bubble()
             if speech_bubble is not None:

@@ -310,50 +310,52 @@ class SpeechBubble(object):
         # Draw text into bubble
         for _, area in enumerate(self.writing_areas):
             # Create context boundary box
-            padding = 24
-            x1, y1 = area["x"] + padding, area["y"] + padding
+            padding = cfg.bubble_content_padding
             width, height = area["width"] - padding, area["height"] - padding
+            x1, y1 = area["x"] + padding, area["y"] + padding
 
-            empty_image = Image.new(mode="RGBA", size=(width, height))
-            draw = ImageDraw.Draw(empty_image)
+            if width > 0 and height > 0:
+                empty_image = Image.new(mode="RGBA", size=(width, height))
+                draw = ImageDraw.Draw(empty_image)
 
-            # Get text lines (It splits text into lines)
-            text = self.texts[0][self.language]
-            if self.language == "Japanese":
-                text = text + text + text + text
-            text_segmented = textwrap.wrap(
-                text, width=round(width / current_font_size))
-            text_preview = text_segmented[0]
+                # Get text lines (It splits text into lines)
+                text = self.texts[0][self.language]
+                if self.language == "Japanese":
+                    text = text + text + text + text
+                text_segmented = textwrap.wrap(
+                    text, width=round(width / current_font_size))
+                text_preview = text_segmented[0]
 
-            # Scale text
-            # fontSize = current_font_size
-            # while font.getsize(text_preview)[0] < width:
-            #     font = ImageFont.truetype(self.font, fontSize)
-            #     fontSize += 1
+                # Scale text
+                fontSize = current_font_size
+                while font.getsize(text_preview)[0] < width:
+                    font = ImageFont.truetype(self.font, fontSize)
+                    fontSize += 1
 
-            # Delete text overflow
-            deleted = 0
-            _, preview_h = draw.textsize(text_preview, font=font)
-            for i, __ in enumerate(text_segmented):
-                if(preview_h * i >= height):
-                    text_segmented.pop(i - deleted)
-                    deleted += 1
-            if(deleted > 0):
-                text_segmented.pop(-1)
+                # Delete text overflow
+                # deleted = 0
+                # _, preview_h = draw.textsize(text_preview, font=font)
+                # for i, __ in enumerate(text_segmented):
+                #     if(preview_h * i >= height):
+                #         text_segmented.pop(i - deleted)
+                #         deleted += 1
+                # if(deleted > 0):
+                #     text_segmented.pop(-1)
 
-            # Center text
-            text = "\n".join(text_segmented)
-            w, h = draw.textsize(text, font=font)
-            x = round(max((width - w) / 2 + x1, padding))
-            y = round(max((height - h) / 2 + y1, padding))
+                # Center text
+                text = "\n".join(text_segmented)
+                w, h = draw.textsize(text, font=font)
+                x = round((width - w) / 2)
+                y = round((height - h) / 2)
 
-            # Write text inside bubble
-            draw.text((0, 0), text,
-                      #   direction=self.text_orientation
-                      align='center',
-                      font=font,
-                      fill=fill_type)
-            bubble.paste(empty_image, (x, y), empty_image)
+                # Write text inside bubble
+                draw.text((x, y), text,
+                          #   direction=self.text_orientation
+                          align='center',
+                          font=font,
+                          fill=fill_type)
+
+                bubble.paste(empty_image, (x1, y1), empty_image)
 
         # Resize bubble
         bubble = bubble.resize((self.width, self.height))

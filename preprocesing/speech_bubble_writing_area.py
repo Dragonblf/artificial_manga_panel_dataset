@@ -31,7 +31,7 @@ def get_largest_rectangle_inside_contours(img):
     # Greater steps are faster but a little bit imprecise.
     # I recomend steps beetween [5, 15]
     rects = []
-    steps = 6
+    steps = 7
     countours_range = range(0, len(contour), steps)
 
     for i in countours_range:
@@ -82,12 +82,15 @@ def get_largest_rectangle_inside_contours(img):
             return [((x1, y1), (x2, y2))]
 
 
-def create_speech_bubbles_writing_areas():
+def create_speech_bubbles_writing_areas(save=True):
     file = paths.DATASET_IMAGES_SPEECH_BUBBLES_WRITING_AREAS_FILE
     folder = paths.DATASET_IMAGES_SPEECH_BUBBLES_FOLDER
+    rects_folder = paths.DATASET_IMAGES_SPEECH_BUBBLES_RECTS_FOLDER
     speech_bubbles = os.listdir(folder)
     if os.path.exists(file):
         os.remove(file)
+    if save:
+        paths.makeFolders([rects_folder])
     with open(file, "w+") as f:
         for bubble in tqdm(speech_bubbles):
             if ".png" in bubble:
@@ -100,6 +103,10 @@ def create_speech_bubbles_writing_areas():
                         x, y = p1
                         items = [file,
                                  str(x), str(y),
-                                 str(abs(x - p2[0])), str(abs(y - p2[1]))]
+                                 str(p2[0] - x), str(p2[1] - y)]
+                        if save:
+                            cv2.rectangle(img, p1, p2, (255, 0, 0))
                         f.write(",".join(items) + "\n")
+                    if save:
+                        cv2.imwrite(rects_folder + bubble, img)
         f.close()
