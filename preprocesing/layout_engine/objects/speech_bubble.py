@@ -310,16 +310,9 @@ class SpeechBubble(object):
         # Draw text into bubble
         for _, area in enumerate(self.writing_areas):
             # Create context boundary box
-            width, height = area["width"], area["height"]
-            horizontal_padding = 48  # max(width * 0.12, 24)
-            vertical_padding = 48  # max(height * 0.12, 24)
-
-            content_box = [area["x"] + horizontal_padding,
-                           area["y"] + vertical_padding,
-                           width - horizontal_padding,
-                           height - vertical_padding]
-            x1, y1, x2, y2 = content_box
-            width, height = x2 - x1, y2 - y1
+            padding = 24
+            x1, y1 = area["x"] + padding, area["y"] + padding
+            width, height = area["width"] - padding, area["height"] - padding
 
             empty_image = Image.new(mode="RGBA", size=(width, height))
             draw = ImageDraw.Draw(empty_image)
@@ -351,8 +344,8 @@ class SpeechBubble(object):
             # Center text
             text = "\n".join(text_segmented)
             w, h = draw.textsize(text, font=font)
-            x = round(max((width - w) / 2 + x1, horizontal_padding))
-            y = round(max((height - h) / 2 + y1, vertical_padding))
+            x = round(max((width - w) / 2 + x1, padding))
+            y = round(max((height - h) / 2 + y1, padding))
 
             # Write text inside bubble
             draw.text((0, 0), text,

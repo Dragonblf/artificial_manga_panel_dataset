@@ -30,8 +30,8 @@ def get_largest_rectangle_inside_contours(img):
     # Lower steps provide better box fit but it's so slow.
     # Greater steps are faster but a little bit imprecise.
     # I recomend steps beetween [5, 15]
-    rect = []
-    steps = 10
+    rects = []
+    steps = 6
     countours_range = range(0, len(contour), steps)
 
     for i in countours_range:
@@ -39,10 +39,10 @@ def get_largest_rectangle_inside_contours(img):
         for j in countours_range:
             x2, y2 = contour[j]
             area = abs(y2 - y1) * abs(x2 - x1)
-            rect.append(((x1, y1), (x2, y2), area))
+            rects.append(((x1, y1), (x2, y2), area))
 
     # the first rect of all_rect has the biggest area, so it's the best solution if he fits in the picture
-    all_rect = sorted(rect, key=lambda x: x[2], reverse=True)
+    all_rect = sorted(rects, key=lambda x: x[2], reverse=True)
 
     # we take the largest rectangle we've got, based on the value of the rectangle area
     # only if the border of the rectangle is not in the black part if the list is not empty
@@ -91,11 +91,15 @@ def create_speech_bubbles_writing_areas():
     with open(file, "w+") as f:
         for bubble in tqdm(speech_bubbles):
             if ".png" in bubble:
-                img = cv2.imread(folder + bubble)
+                file = folder + bubble
+                img = cv2.imread(file)
                 rects = get_largest_rectangle_inside_contours(img)
                 if rects:
                     for pts in rects:
                         p1, p2 = pts
-                        items = [bubble, str(p1), str(p2)]
+                        x, y = p1
+                        items = [file,
+                                 str(x), str(y),
+                                 str(abs(x - p2[0])), str(abs(y - p2[1]))]
                         f.write(",".join(items) + "\n")
         f.close()

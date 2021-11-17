@@ -118,26 +118,48 @@ if __name__ == '__main__':
         n = args.generate_pages[0]  # number of pages
 
         print("Loading files")
-        images_folder = paths.DATASET_IMAGES_FOLDER
+        images_folder = paths.DATASET_IMAGES_FILES_FOLDER
         bubbles_folder = paths.DATASET_IMAGES_SPEECH_BUBBLES_FOLDER
         generated_images_folder = paths.GENERATED_IMAGES_FOLDER
         generated_metadata_folder = paths.GENERATED_METADATA_FOLDER
 
-        viable_font_files = []
-        texts = pd.read_parquet(paths.DATASET_TEXT_JESC_DIALOGUES_FOLDER)
+        texts_dataset = pd.read_parquet(
+            paths.DATASET_TEXT_JESC_DIALOGUES_FOLDER)
         image_dir = os.listdir(images_folder)
         speech_bubble_files = os.listdir(bubbles_folder)
         speech_bubble_files = [bubbles_folder + filename
-                               for filename in speech_bubble_files
-                               ]
+                               for filename in speech_bubble_files]
 
-        with open(paths.DATASET_FONTS_VIABLE_FONTS_FILE) as viable_fonts:
-            for line in viable_fonts.readlines():
-                path, japanese_viable, english_viable = line.split(",")
-                japanese_viable = japanese_viable.replace("\n", "")
-                english_viable = english_viable.replace("\n", "")
-                if japanese_viable == "True":
-                    viable_font_files.append(path)
+        # Load viable fonts for selected language
+        viable_font_files = []
+        try:
+            with open(paths.DATASET_FONTS_VIABLE_FONTS_FILE) as f:
+                for line in f.readlines():
+                    path, japanese_viable, english_viable = line.split(",")
+                    japanese_viable = japanese_viable.replace("\n", "")
+                    english_viable = english_viable.replace("\n", "")
+                    if japanese_viable == "True":
+                        viable_font_files.append(path)
+                f.close()
+        except:
+            pass
+
+        # Load speech bubbles writing areas
+        writing_areas = []
+        try:
+            with open(paths.DATASET_IMAGES_SPEECH_BUBBLES_WRITING_AREAS_FILE) as f:
+                for line in f.readlines():
+                    path, x, y, w, h = line.split(",")
+                    writing_areas.append({
+                        "path": path,
+                        "x": int(x),
+                        "y": int(y),
+                        "width": int(w),
+                        "height": int(h),
+                    })
+                f.close()
+        except:
+            pass
 
         print("Running creation of metadata")
         pages = []
@@ -146,8 +168,9 @@ if __name__ == '__main__':
             page = create_page_metadata(image_dir,
                                         images_folder,
                                         viable_font_files,
-                                        texts,
-                                        speech_bubble_files)
+                                        texts_dataset,
+                                        speech_bubble_files,
+                                        writing_areas)
             page.dump_data(generated_metadata_folder, dry=False)
             pages.append(page)
 

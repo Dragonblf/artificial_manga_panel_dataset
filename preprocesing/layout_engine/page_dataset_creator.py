@@ -1416,7 +1416,7 @@ def create_single_panel_metadata(panel,
                                  font_files,
                                  text_dataset,
                                  speech_bubble_files,
-                                 #  speech_bubble_tags,
+                                 writing_areas,
                                  minimum_speech_bubbles=0,
                                  speech_bubbles_generated=[],
                                  ):
@@ -1452,10 +1452,10 @@ def create_single_panel_metadata(panel,
 
     :type speech_bubble_files: list
 
-    :param speech_bubble_tags: a list of speech bubble
+    :param writing_areas: a list of speech bubble
     writing area tags by filename
 
-    :type speech_bubble_tags: list
+    :type writing_areas: list
 
     :param minimum_speech_bubbles: Set whether panels
     have a minimum number of speech bubbles, defaults to 0
@@ -1493,17 +1493,23 @@ def create_single_panel_metadata(panel,
         speech_bubble_file = speech_bubble_files[speech_bubble_file_idx]
         img = cv2.imread(speech_bubble_file)
         h, w, _ = img.shape
-        speech_bubble_writing_area = [{
-            "x": 0,
-            "y": 0,
-            "width":  w,
-            "height": h,
-        }]
+        speech_bubble_writing_areas = []
+
+        for area in writing_areas:
+            if area["path"] == speech_bubble_file:
+                new_area = area
+                if(new_area["width"] <= 0):
+                    new_area["width"] = w
+                    new_area["x"] = 0
+                if(new_area["height"] <= 0):
+                    new_area["height"] = h
+                    new_area["y"] = 0
+                speech_bubble_writing_areas.append(new_area)
 
         # Select text for writing areas
         texts = []
         text_indices = []
-        for _ in speech_bubble_writing_area:
+        for _ in speech_bubble_writing_areas:
             text_idx = np.random.randint(0, text_dataset_len)
             text_indices.append(text_idx)
             text = text_dataset.iloc[text_idx].to_dict()
@@ -1548,7 +1554,7 @@ def create_single_panel_metadata(panel,
                                          text_indices=text_indices,
                                          font=font,
                                          speech_bubble=speech_bubble_file,
-                                         writing_areas=speech_bubble_writing_area,
+                                         writing_areas=speech_bubble_writing_areas,
                                          location=(x, y),
                                          width=w,
                                          height=h,
@@ -1571,7 +1577,7 @@ def populate_panels(page: Page,
                     font_files,
                     text_dataset,
                     speech_bubble_files,
-                    # speech_bubble_tags,
+                    writing_areas,
                     minimum_speech_bubbles=0
                     ):
     """
@@ -1606,10 +1612,10 @@ def populate_panels(page: Page,
 
     :type speech_bubble_files: list
 
-    :param speech_bubble_tags: a list of speech bubble
+    :param writing_areas: a list of speech bubble
     writing area tags by filename
 
-    :type speech_bubble_tags: list
+    :type writing_areas: list
 
     :param minimum_speech_bubbles: Set whether panels
     have a minimum number of speech bubbles, defaults to 0
@@ -1630,7 +1636,7 @@ def populate_panels(page: Page,
                                          font_files,
                                          text_dataset,
                                          speech_bubble_files,
-                                         #  speech_bubble_tags,
+                                         writing_areas,
                                          minimum_speech_bubbles,
                                          speech_bubbles_generated
                                          )
@@ -1641,7 +1647,7 @@ def populate_panels(page: Page,
                                      font_files,
                                      text_dataset,
                                      speech_bubble_files,
-                                     #  speech_bubble_tags,
+                                     writing_areas,
                                      minimum_speech_bubbles,
                                      speech_bubbles_generated
                                      )
@@ -2271,7 +2277,7 @@ def create_page_metadata(image_dir,
                          font_files,
                          text_dataset,
                          speech_bubble_files,
-                         #  speech_bubble_tags
+                         writing_areas
                          ):
     """
     This function creates page metadata for a single page. It includes
@@ -2303,10 +2309,10 @@ def create_page_metadata(image_dir,
 
     :type speech_bubble_files: list
 
-    :param speech_bubble_tags: a list of speech bubble
+    :param writing_areas: a list of speech bubble
     writing area tags by filename
 
-    :type speech_bubble_tags: list
+    :type writing_areas: list
 
     :return: Created Page with all the bells and whistles
 
@@ -2338,7 +2344,7 @@ def create_page_metadata(image_dir,
                            font_files,
                            text_dataset,
                            speech_bubble_files,
-                           #    speech_bubble_tags
+                           writing_areas
                            )
 
     if np.random.random() < cfg.panel_removal_chance:
