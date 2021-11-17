@@ -16,7 +16,7 @@ from preprocesing.extract_and_verify_fonts import (
     verify_font_files
 )
 from preprocesing.convert_images import convert_images_to_bw, split_speech_bubbles
-from preprocesing.layout_engine.page_creator import render_pages, render_pages_from_files
+from preprocesing.layout_engine.page_creator import render_pages, segment_pages
 from preprocesing.layout_engine.page_dataset_creator import create_page_metadata
 
 
@@ -74,7 +74,9 @@ if __name__ == '__main__':
                         default=paths.ENGLISH_LANGUAGE, type=str)
 
     parser.add_argument("--generate_pages", "-gp", nargs=1,
-                        type=int, help="Generate pages count")
+                        type=int, help="Generate pages count", default=5)
+    parser.add_argument("--segmented", "-s",
+                        action="store_true", default=False)
 
     parser.add_argument("--dry", action="store_true", default=False)
     parser.add_argument("--run_tests", action="store_true")
@@ -102,7 +104,7 @@ if __name__ == '__main__':
         verify_font_files()
 
     if args.calculate_writing_areas:
-        create_speech_bubbles_writing_areas()
+        create_speech_bubbles_writing_areas(save=args.segmented)
 
     # Download and convert image from Kaggle
     if args.download_images:
@@ -171,7 +173,7 @@ if __name__ == '__main__':
         except:
             pass
 
-        print("Running creation of metadata")
+        print("Running creation of metadata...")
         pages = []
         paths.makeFolders(paths.GENERATED_FOLDER_PATHS)
         for i in tqdm(range(n)):
@@ -185,13 +187,11 @@ if __name__ == '__main__':
             page.dump_data(generated_metadata_folder, dry=False)
             pages.append(page)
 
-        if not os.path.isdir(generated_metadata_folder):
-            print("There is no metadata please generate metadata first")
-            if not args.dry:
-                os.mkdir(generated_images_folder)
-        else:
-            print("Loading metadata and rendering")
-            render_pages(pages, generated_images_folder, dry=args.dry)
+        print("Rendering images...")
+        render_pages(pages, dry=args.dry)
+        if args.segmented:
+            print("Segmentanting images...")
+            segment_pages(pages)
 
     if args.run_tests:
         pytest.main([
