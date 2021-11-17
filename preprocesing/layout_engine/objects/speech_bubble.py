@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import textwrap
+import paths
 from ... import config_file as cfg
 
 
@@ -75,10 +76,10 @@ class SpeechBubble(object):
                  location,
                  width,
                  height,
+                 language=paths.ENGLISH_LANGUAGE,
                  transforms=None,
                  transform_metadata=None,
-                 text_orientation="ltr",
-                 language="Japanese"):
+                 text_orientation="ltr"):
         """
         Constructor method
         """
@@ -194,8 +195,8 @@ class SpeechBubble(object):
         mask = bubble.copy()
 
         # Set variable font size
-        current_font_size = self.font_size
-        font = ImageFont.truetype(self.font, current_font_size)
+        # current_font_size = self.font_size
+        # font = ImageFont.truetype(self.font, current_font_size)
 
         # States is used to indicate whether this bubble is
         # inverted or not to the page render function
@@ -320,33 +321,27 @@ class SpeechBubble(object):
 
                 # Get text lines (It splits text into lines)
                 text = self.texts[0][self.language]
-                if self.language == "Japanese":
+                if self.language == paths.JAPANASE_LANGUAGE:
                     text = text + text + text + text
-                text_segmented = textwrap.wrap(
-                    text, width=round(width / current_font_size))
-                text_preview = text_segmented[0]
 
-                # Scale text
-                fontSize = current_font_size
-                while font.getsize(text_preview)[0] < width:
-                    font = ImageFont.truetype(self.font, fontSize)
-                    fontSize += 1
+                # Wrap text for 16 chars per line
+                text_segmented = textwrap.wrap(text, width=16)
+                text = "\n".join(text_segmented)
 
-                # Delete text overflow
-                # deleted = 0
-                # _, preview_h = draw.textsize(text_preview, font=font)
-                # for i, __ in enumerate(text_segmented):
-                #     if(preview_h * i >= height):
-                #         text_segmented.pop(i - deleted)
-                #         deleted += 1
-                # if(deleted > 0):
-                #     text_segmented.pop(-1)
+                # Scale font size horizontally
+                current_font_size = cfg.min_font_size
+                font = ImageFont.truetype(self.font, current_font_size)
+                current_font_size = (
+                    width / draw.textsize(text, font=font)[0]) * current_font_size
+                current_font_size = round(current_font_size)
+                current_font_size = max(
+                    min(current_font_size, cfg.max_font_size), cfg.min_font_size)
+                font = ImageFont.truetype(self.font, current_font_size)
 
                 # Center text
-                text = "\n".join(text_segmented)
                 w, h = draw.textsize(text, font=font)
-                x = round((width - w) / 2)
-                y = round((height - h) / 2)
+                x = max(round((width - w) / 2), 0)
+                y = max(round((height - h) / 2), 0)
 
                 # Write text inside bubble
                 draw.text((x, y), text,

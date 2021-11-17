@@ -1417,6 +1417,7 @@ def create_single_panel_metadata(panel,
                                  text_dataset,
                                  speech_bubble_files,
                                  writing_areas,
+                                 language,
                                  minimum_speech_bubbles=0,
                                  speech_bubbles_generated=[],
                                  ):
@@ -1554,6 +1555,7 @@ def create_single_panel_metadata(panel,
                                          writing_areas=speech_bubble_writing_areas,
                                          location=(x, y),
                                          width=w,
+                                         language=language,
                                          height=h,
                                          )
             speech_bubbles_generated.append(speech_bubble)
@@ -1575,6 +1577,7 @@ def populate_panels(page: Page,
                     text_dataset,
                     speech_bubble_files,
                     writing_areas,
+                    language,
                     minimum_speech_bubbles=0
                     ):
     """
@@ -1634,8 +1637,9 @@ def populate_panels(page: Page,
                                          text_dataset,
                                          speech_bubble_files,
                                          writing_areas,
-                                         minimum_speech_bubbles,
-                                         speech_bubbles_generated
+                                         language,
+                                         speech_bubbles_generated=speech_bubbles_generated,
+                                         minimum_speech_bubbles=minimum_speech_bubbles,
                                          )
     else:
         create_single_panel_metadata(page,
@@ -1645,8 +1649,9 @@ def populate_panels(page: Page,
                                      text_dataset,
                                      speech_bubble_files,
                                      writing_areas,
-                                     minimum_speech_bubbles,
-                                     speech_bubbles_generated
+                                     language,
+                                     speech_bubbles_generated=speech_bubbles_generated,
+                                     minimum_speech_bubbles=minimum_speech_bubbles,
                                      )
     return page
 
@@ -2274,7 +2279,8 @@ def create_page_metadata(image_dir,
                          font_files,
                          text_dataset,
                          speech_bubble_files,
-                         writing_areas
+                         writing_areas,
+                         language
                          ):
     """
     This function creates page metadata for a single page. It includes
@@ -2311,6 +2317,10 @@ def create_page_metadata(image_dir,
 
     :type writing_areas: list
 
+    :param language: language used to generate text
+
+    :type language: str
+
     :return: Created Page with all the bells and whistles
 
     :rtype: Page
@@ -2341,7 +2351,8 @@ def create_page_metadata(image_dir,
                            font_files,
                            text_dataset,
                            speech_bubble_files,
-                           writing_areas
+                           writing_areas,
+                           language
                            )
 
     if np.random.random() < cfg.panel_removal_chance:

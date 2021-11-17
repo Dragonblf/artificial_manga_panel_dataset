@@ -11,10 +11,10 @@ def convert_jesc_to_dataframe():
     dataset_path = paths.DATASET_TEXT_FOLDER
     print("Loading data and converting to Dask Dataframe")
     filename = "raw.txt"
-    df = dd.read_csv(dataset_path+filename, sep="\t")
-    df.columns = ["English", "Japanese"]
+    df = dd.read_csv(dataset_path + filename, sep="\t")
+    df.columns = paths.LANGUAGES_AVAILABLE
 
     print("Saving data as Parquet archive")
     df.to_parquet(paths.DATASET_TEXT_JESC_DIALOGUES_FOLDER)
-    os.remove(dataset_path+filename)
+    os.remove(dataset_path + filename)
     os.remove(paths.DATASET_TEXT_RAW_JESC_DIALOGUES_FILE)

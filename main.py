@@ -62,11 +62,16 @@ if __name__ == '__main__':
 
     parser.add_argument("--calculate_writing_areas", "-cwa",
                         action="store_true",
-                        help="Create all dataset folders")
+                        help="Calculate writing areas of speech bubbles")
 
     parser.add_argument("--make_dirs", "-mk",
                         action="store_true",
                         help="Create all dataset folders")
+
+    parser.add_argument("--language", "-l",
+                        help="Text will display inside SpeechBubbles. Available " +
+                        str(paths.LANGUAGES_AVAILABLE),
+                        default=paths.ENGLISH_LANGUAGE)
 
     parser.add_argument("--render_pages", "-rp", action="store_true")
     parser.add_argument("--generate_pages", "-gp", nargs=1, type=int)
@@ -111,18 +116,18 @@ if __name__ == '__main__':
 
     # Combines the above in case of small size
     if args.generate_pages is not None:
-        # if not features.check('raqm'):
-        #     raise Exception(
-        #         "Libraqm is required for rendering CJK text properly. Follow instructions https://github.com/HOST-Oman/libraqm")
+        language = args.language
+        if not language in paths.LANGUAGES_AVAILABLE:
+            raise Exception("That language is not avaible. Available " +
+                            str(paths.LANGUAGES_AVAILABLE))
 
         n = args.generate_pages[0]  # number of pages
-
-        print("Loading files")
         images_folder = paths.DATASET_IMAGES_FILES_FOLDER
         bubbles_folder = paths.DATASET_IMAGES_SPEECH_BUBBLES_FOLDER
         generated_images_folder = paths.GENERATED_IMAGES_FOLDER
         generated_metadata_folder = paths.GENERATED_METADATA_FOLDER
 
+        print("Loading texts...")
         texts_dataset = pd.read_parquet(
             paths.DATASET_TEXT_JESC_DIALOGUES_FOLDER)
         image_dir = os.listdir(images_folder)
@@ -131,20 +136,24 @@ if __name__ == '__main__':
                                for filename in speech_bubble_files]
 
         # Load viable fonts for selected language
+        print("Loading fonts...")
         viable_font_files = []
         try:
             with open(paths.DATASET_FONTS_VIABLE_FONTS_FILE) as f:
                 for line in f.readlines():
                     path, japanese_viable, english_viable = line.split(",")
-                    japanese_viable = japanese_viable.replace("\n", "")
-                    english_viable = english_viable.replace("\n", "")
-                    if japanese_viable == "True":
-                        viable_font_files.append(path)
+                    if language == paths.ENGLISH_LANGUAGE:
+                        if english_viable.replace("\n", "") == "True":
+                            viable_font_files.append(path)
+                    elif language == paths.JAPANASE_LANGUAGE:
+                        if japanese_viable.replace("\n", "") == "True":
+                            viable_font_files.append(path)
                 f.close()
         except:
             pass
 
         # Load speech bubbles writing areas
+        print("Loading writing areas...")
         writing_areas = []
         try:
             with open(paths.DATASET_IMAGES_SPEECH_BUBBLES_WRITING_AREAS_FILE) as f:
@@ -152,10 +161,10 @@ if __name__ == '__main__':
                     path, x, y, w, h = line.split(",")
                     writing_areas.append({
                         "path": path,
-                        "x": int(x),
-                        "y": int(y),
                         "width": int(w),
                         "height": int(h),
+                        "x": int(x),
+                        "y": int(y),
                     })
                 f.close()
         except:
@@ -170,7 +179,8 @@ if __name__ == '__main__':
                                         viable_font_files,
                                         texts_dataset,
                                         speech_bubble_files,
-                                        writing_areas)
+                                        writing_areas,
+                                        language)
             page.dump_data(generated_metadata_folder, dry=False)
             pages.append(page)
 

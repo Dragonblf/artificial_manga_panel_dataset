@@ -125,8 +125,8 @@ def create_japanese_test_characters(render_text_test_file):
     """
     df = dd.read_parquet(paths.DATASET_TEXT_JESC_DIALOGUES_FOLDER)
     print("Loaded DF. Now seperating word to characters")
-    char_sep = df['Japanese'].apply(
-        make_char_list, meta=("Japanese", "object"))
+    char_sep = df[paths.JAPANASE_LANGUAGE].apply(
+        make_char_list, meta=(paths.JAPANASE_LANGUAGE, "object"))
     char_sep = char_sep.compute()
     print("Char sep done. Starting making lists of characters")
     char_lists = char_sep.aggregate(lambda x: x.tolist())
