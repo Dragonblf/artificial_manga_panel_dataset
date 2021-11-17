@@ -8,6 +8,7 @@ from scraping.download_texts import download_and_extract_jesc
 from scraping.download_fonts import get_font_links
 from scraping.download_images import download_db_illustrations
 
+from preprocesing.speech_bubble_writing_area import create_speech_bubbles_writing_areas
 from preprocesing.text_dataset_format_changer import convert_jesc_to_dataframe
 from preprocesing.extract_and_verify_fonts import (
     extract_fonts,
@@ -59,6 +60,10 @@ if __name__ == '__main__':
                         action="store_true",
                         help="Convert downloaded images to black and white")
 
+    parser.add_argument("--calculate_writing_areas", "-cwa",
+                        action="store_true",
+                        help="Create all dataset folders")
+
     parser.add_argument("--make_dirs", "-mk",
                         action="store_true",
                         help="Create all dataset folders")
@@ -89,13 +94,9 @@ if __name__ == '__main__':
 
     if args.verify_fonts:
         verify_font_files()
-        # render_text_test_file = paths.DATASET_FONTS_FOLDER + "render_test_text.txt"
-        # verify_font_files(
-        #     paths.DATASET_TEXT_JESC_DIALOGUES_FOLDER,
-        #     render_text_test_file,
-        #     paths.DATASET_FONTS_FILES_FOLDER,
-        #     paths.DATASET_FONTS_FOLDER
-        # )
+
+    if args.calculate_writing_areas:
+        create_speech_bubbles_writing_areas()
 
     # Download and convert image from Kaggle
     if args.download_images:
@@ -117,17 +118,19 @@ if __name__ == '__main__':
         n = args.generate_pages[0]  # number of pages
 
         print("Loading files")
-        image_dir = os.listdir(paths.DATASET_IMAGES_FILES_FOLDER)
-        text_dataset = pd.read_parquet(
-            paths.DATASET_TEXT_JESC_DIALOGUES_FOLDER)
+        images_folder = paths.DATASET_IMAGES_FOLDER
+        bubbles_folder = paths.DATASET_IMAGES_SPEECH_BUBBLES_FOLDER
+        generated_images_folder = paths.GENERATED_IMAGES_FOLDER
+        generated_metadata_folder = paths.GENERATED_METADATA_FOLDER
 
-        speech_bubble_files = os.listdir(
-            paths.DATASET_IMAGES_SPEECH_BUBBLES_FOLDER)
-        speech_bubble_files = [paths.DATASET_IMAGES_SPEECH_BUBBLES_FOLDER + filename
+        viable_font_files = []
+        texts = pd.read_parquet(paths.DATASET_TEXT_JESC_DIALOGUES_FOLDER)
+        image_dir = os.listdir(images_folder)
+        speech_bubble_files = os.listdir(bubbles_folder)
+        speech_bubble_files = [bubbles_folder + filename
                                for filename in speech_bubble_files
                                ]
-        paths.makeFolders(paths.GENERATED_FOLDER_PATHS)
-        viable_font_files = []
+
         with open(paths.DATASET_FONTS_VIABLE_FONTS_FILE) as viable_fonts:
             for line in viable_fonts.readlines():
                 path, japanese_viable, english_viable = line.split(",")
@@ -138,22 +141,23 @@ if __name__ == '__main__':
 
         print("Running creation of metadata")
         pages = []
+        paths.makeFolders(paths.GENERATED_FOLDER_PATHS)
         for i in tqdm(range(n)):
             page = create_page_metadata(image_dir,
-                                        paths.DATASET_IMAGES_FILES_FOLDER,
+                                        images_folder,
                                         viable_font_files,
-                                        text_dataset,
+                                        texts,
                                         speech_bubble_files)
-            page.dump_data(paths.GENERATED_METADATA_FOLDER, dry=False)
+            page.dump_data(generated_metadata_folder, dry=False)
             pages.append(page)
 
-        if not os.path.isdir(paths.GENERATED_METADATA_FOLDER):
+        if not os.path.isdir(generated_metadata_folder):
             print("There is no metadata please generate metadata first")
             if not args.dry:
-                os.mkdir(paths.GENERATED_IMAGES_FOLDER)
+                os.mkdir(generated_images_folder)
         else:
             print("Loading metadata and rendering")
-            render_pages(pages, paths.GENERATED_IMAGES_FOLDER, dry=args.dry)
+            render_pages(pages, generated_images_folder, dry=args.dry)
 
     if args.run_tests:
         pytest.main([
