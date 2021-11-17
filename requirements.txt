@@ -9,7 +9,6 @@ fonttools==4.22.1
 Pillow==8.4.0
 dvc==2.0.18
 pyclipper==1.2.1
-cjkwrap==2.2
 kaggle==1.5.12
 dvc[gs]
 pytest==6.2.3

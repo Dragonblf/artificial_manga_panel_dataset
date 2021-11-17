@@ -71,10 +71,11 @@ if __name__ == '__main__':
     parser.add_argument("--language", "-l",
                         help="Text will display inside SpeechBubbles. Available " +
                         str(paths.LANGUAGES_AVAILABLE),
-                        default=paths.ENGLISH_LANGUAGE)
+                        default=paths.ENGLISH_LANGUAGE, type=str)
 
-    parser.add_argument("--render_pages", "-rp", action="store_true")
-    parser.add_argument("--generate_pages", "-gp", nargs=1, type=int)
+    parser.add_argument("--generate_pages", "-gp", nargs=1,
+                        type=int, help="Generate pages count")
+
     parser.add_argument("--dry", action="store_true", default=False)
     parser.add_argument("--run_tests", action="store_true")
 
@@ -127,7 +128,7 @@ if __name__ == '__main__':
         generated_images_folder = paths.GENERATED_IMAGES_FOLDER
         generated_metadata_folder = paths.GENERATED_METADATA_FOLDER
 
-        print("Loading texts...")
+        print("Loading texts in " + language + "...")
         texts_dataset = pd.read_parquet(
             paths.DATASET_TEXT_JESC_DIALOGUES_FOLDER)
         image_dir = os.listdir(images_folder)

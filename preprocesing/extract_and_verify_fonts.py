@@ -1,11 +1,9 @@
 import os
 import concurrent.futures
 import zipfile
-import shutil
 import dask.dataframe as dd
 import itertools
-from fontTools.ttLib import TTFont
-from fontTools.ttLib import TTLibError
+from fontTools.ttLib import TTFont, TTLibError
 from tqdm import tqdm
 from . import config_file as cfg
 from pathlib import Path
@@ -28,16 +26,16 @@ def extract_fonts():
     A function to get the font files which are in zip format and
     extract them
     """
-    if not os.path.isdir(paths.DATASET_FONTS_UNZIPPED_FOLDER):
-        os.mkdir(paths.DATASET_FONTS_UNZIPPED_FOLDER)
-
+    print("Extracting fonts...")
+    unzipped = paths.DATASET_FONTS_UNZIPPED_FOLDER
+    paths.makeFolders([unzipped])
     files = os.listdir(paths.DATASET_FONTS_ZIPPED_FOLDER)
     files = [filename for filename in files if filename.endswith(".zip")]
-    filepaths = [(paths.DATASET_FONTS_ZIPPED_FOLDER + filename, paths.DATASET_FONTS_UNZIPPED_FOLDER)
+    filepaths = [(paths.DATASET_FONTS_ZIPPED_FOLDER + filename, unzipped)
                  for filename in files]
 
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        executor.map(unzip_file, filepaths)
+        _ = list(tqdm(executor.map(unzip_file, filepaths)))
 
 
 def move_files(paths):
@@ -46,53 +44,40 @@ def move_files(paths):
 
     :param paths: A set of paths 0 is from 1 is to
 
-    :type paths: list
+    :type list: (Path, str)
     """
-    filepath = str(paths[0])
-    if not os.path.isfile(filepath):
-        shutil.move(filepath, paths[1])
+    destination = str(paths[1])
+    if not os.path.exists(destination):
+        paths[0].rename(destination)
 
 
 def move_fonts():
     """
     A function to find the .otf and .ttf
     font files from the scraped font files
-
-    :param paths.DATASET_FONTS_UNZIPPED_FOLDER: Path for zip files
-    of font files
-
-    :type paths.DATASET_FONTS_UNZIPPED_FOLDER: str
-
-    :param paths.DATASET_FONTS_ZIPPED_FOLDER: Place where all the
-    raw font files exist whether zipped or not
-
-    :type paths.DATASET_FONTS_ZIPPED_FOLDER: str
-
-    :param paths.DATASET_FONTS_FILES_FOLDER: Out directory for font files
-
-    :type paths.DATASET_FONTS_FILES_FOLDER: str
     """
     # Get all relevant font files
-    print("Finding font files")
-    font_files = list(
-        Path(paths.DATASET_FONTS_UNZIPPED_FOLDER).rglob("*.[tT][tT][fF]"))
-    font_files += list(
-        Path(paths.DATASET_FONTS_UNZIPPED_FOLDER).rglob("*.[oO][tT][fF]"))
-    font_files += list(Path(paths.DATASET_FONTS_ZIPPED_FOLDER)
-                       .rglob("*.[tT][tT][fF]"))
-    font_files += list(Path(paths.DATASET_FONTS_ZIPPED_FOLDER)
-                       .rglob("*.[oO][tT][fF]"))
+    fonts = paths.DATASET_FONTS_FILES_FOLDER
+    zipped = paths.DATASET_FONTS_ZIPPED_FOLDER
+    unzipped = paths.DATASET_FONTS_UNZIPPED_FOLDER
 
-    font_files_and_paths = [(font_path, paths.DATASET_FONTS_FILES_FOLDER)
+    print("Finding fonts [.otf, .ttf]...")
+    font_files = list(Path(unzipped).rglob("*.[tT][tT][fF]"))
+    font_files += list(Path(unzipped).rglob("*.[oO][tT][fF]"))
+    font_files += list(Path(zipped).rglob("*.[tT][tT][fF]"))
+    font_files += list(Path(zipped).rglob("*.[oO][tT][fF]"))
+
+    font_files_and_paths = [(font_path, fonts + font_path.name)
                             for font_path in font_files]
 
-    print("Moving font files")
-    for path in font_files_and_paths:
-        move_files(path)
+    print("Moving fonts...")
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        _ = list(tqdm(executor.map(move_files, font_files_and_paths)))
 
     # Clean up the folder
-    shutil.rmtree(paths.DATASET_FONTS_UNZIPPED_FOLDER)
-    # shutil.rmtree(paths.DATASET_FONTS_ZIPPED_FOLDER)
+    # print("Deleting unzipped and zipped folders...")
+    # shutil.rmtree(unzipped)
+    # shutil.rmtree(zipped)
 
 
 def make_char_list(row):
@@ -212,7 +197,6 @@ def verify_font_files():
     print("Writing viability to file: ", paths.DATASET_FONTS_VIABLE_FONTS_FILE)
     with open(paths.DATASET_FONTS_VIABLE_FONTS_FILE, "w+") as viable_font_file:
         for font in fonts_coverage:
-            print(font[1:])
             coverage_states = []
             for coverage in font[1:]:
                 coverage_states.append(
