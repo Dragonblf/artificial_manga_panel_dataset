@@ -3,6 +3,7 @@ import numpy as np
 import math
 import random
 import pyclipper
+import paths
 
 from .. import config_file as cfg
 from .objects.panel import Panel
@@ -1418,7 +1419,6 @@ def create_single_panel_metadata(panel,
                                  speech_bubble_files,
                                  writing_areas,
                                  language,
-                                 minimum_speech_bubbles=0,
                                  speech_bubbles_generated=[],
                                  ):
     """
@@ -1457,11 +1457,6 @@ def create_single_panel_metadata(panel,
     writing area tags by filename
 
     :type writing_areas: list
-
-    :param minimum_speech_bubbles: Set whether panels
-    have a minimum number of speech bubbles, defaults to 0
-
-    :type  minimum_speech_bubbles: int
     """
 
     # Image to be used inside panel
@@ -1470,7 +1465,7 @@ def create_single_panel_metadata(panel,
     panel.image = image_dir_path + select_image
 
     # Select number of speech bubbles to assign to panel
-    num_speech_bubbles = np.random.randint(minimum_speech_bubbles,
+    num_speech_bubbles = np.random.randint(cfg.min_speech_bubbles_per_panel,
                                            cfg.max_speech_bubbles_per_panel)
 
     # Get lengths of datasets
@@ -1495,10 +1490,10 @@ def create_single_panel_metadata(panel,
         speech_bubble_file = speech_bubble_files[speech_bubble_file_idx]
         img = cv2.imread(speech_bubble_file)
         h, w, _ = img.shape
-
+        padding = cfg.bubble_content_padding
         for area in writing_areas:
             if area["path"] == speech_bubble_file:
-                if area["width"] > 0 and area["height"] > 0:
+                if area["width"] > padding and area["height"] > padding:
                     speech_bubble_writing_areas.append(area)
 
         if not speech_bubble_writing_areas:
@@ -1509,9 +1504,21 @@ def create_single_panel_metadata(panel,
         text_indices = []
         for _ in speech_bubble_writing_areas:
             text_idx = np.random.randint(0, text_dataset_len)
-            text_indices.append(text_idx)
             text = text_dataset.iloc[text_idx].to_dict()
+
+            # Transform text (lowercase, uppercase and capitalize)
+            text_transform = np.random.randint(0, 5)
+            english = text[paths.ENGLISH_LANGUAGE]
+            if text_transform in [1, 2]:
+                english = english.upper()
+            elif text_transform == 3:
+                english = english.lower()
+            else:
+                english = english.capitalize()
+            text[paths.ENGLISH_LANGUAGE] = english
+
             texts.append(text)
+            text_indices.append(text_idx)
 
         # Scale bubble to < 40% of panel area
         bubble_area = h * w
@@ -1577,9 +1584,7 @@ def populate_panels(page: Page,
                     text_dataset,
                     speech_bubble_files,
                     writing_areas,
-                    language,
-                    minimum_speech_bubbles=0
-                    ):
+                    language):
     """
     This function takes all the panels and adds backgorund images
     and speech bubbles to them
@@ -1617,11 +1622,6 @@ def populate_panels(page: Page,
 
     :type writing_areas: list
 
-    :param minimum_speech_bubbles: Set whether panels
-    have a minimum number of speech bubbles, defaults to 0
-
-    :type  minimum_speech_bubbles: int
-
     :return: Page with populated panels
 
     :rtype: Page
@@ -1638,8 +1638,7 @@ def populate_panels(page: Page,
                                          speech_bubble_files,
                                          writing_areas,
                                          language,
-                                         speech_bubbles_generated=speech_bubbles_generated,
-                                         minimum_speech_bubbles=minimum_speech_bubbles,
+                                         speech_bubbles_generated=speech_bubbles_generated
                                          )
     else:
         create_single_panel_metadata(page,
@@ -1650,8 +1649,7 @@ def populate_panels(page: Page,
                                      speech_bubble_files,
                                      writing_areas,
                                      language,
-                                     speech_bubbles_generated=speech_bubbles_generated,
-                                     minimum_speech_bubbles=minimum_speech_bubbles,
+                                     speech_bubbles_generated=speech_bubbles_generated
                                      )
     return page
 
