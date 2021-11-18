@@ -70,7 +70,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--language", "-l",
                         help="Text will display inside SpeechBubbles. Available " +
-                        str(paths.LANGUAGES_AVAILABLE),
+                        str(paths.LANGUAGES_MODE_AVAILABLE),
                         default=paths.ENGLISH_LANGUAGE, type=str)
 
     parser.add_argument("--generate_pages", "-gp", nargs=1,
@@ -128,9 +128,9 @@ if __name__ == '__main__':
     # Combines the above in case of small size
     if args.generate_pages is not None:
         language = args.language
-        if not language in paths.LANGUAGES_AVAILABLE:
+        if not language in paths.LANGUAGES_MODE_AVAILABLE:
             raise Exception("That language is not avaible. Available " +
-                            str(paths.LANGUAGES_AVAILABLE))
+                            str(paths.LANGUAGES_MODE_AVAILABLE))
 
         n = args.generate_pages[0]  # number of pages
         images_folder = paths.DATASET_IMAGES_FILES_FOLDER
@@ -152,13 +152,18 @@ if __name__ == '__main__':
         try:
             with open(paths.DATASET_FONTS_VIABLE_FONTS_FILE) as f:
                 for line in f.readlines():
+                    append_font = False
                     path, japanese_viable, english_viable = line.split(",")
-                    if language == paths.ENGLISH_LANGUAGE:
-                        if english_viable.replace("\n", "") == "True":
-                            viable_font_files.append(path)
+                    english_viable = bool(english_viable.replace("\n", ""))
+                    japanese_viable = bool(japanese_viable.replace("\n", ""))
+                    if language == paths.ALL_LANGUAGE:
+                        append_font = english_viable and japanese_viable
+                    elif language == paths.ENGLISH_LANGUAGE:
+                        append_font = english_viable
                     elif language == paths.JAPANASE_LANGUAGE:
-                        if japanese_viable.replace("\n", "") == "True":
-                            viable_font_files.append(path)
+                        append_font = japanese_viable
+                    if append_font:
+                        viable_font_files.append(path)
                 f.close()
         except:
             pass

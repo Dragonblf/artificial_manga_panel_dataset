@@ -56,7 +56,7 @@ min_speech_bubbles_per_panel = 1
 bubble_to_panel_area_max_ratio = 0.48
 bubble_mask_x_increase = 16
 bubble_mask_y_increase = 16
-min_font_size = 16
+min_font_size = 24
 max_font_size = 48
 
 # *Transformations*

@@ -1471,7 +1471,7 @@ def create_single_panel_metadata(panel,
     # Get lengths of datasets
     text_dataset_len = len(text_dataset)
     font_dataset_len = len(font_files)
-    speech_bubble_dataset_len = len(speech_bubble_files)
+    speech_bubbles_files = len(speech_bubble_files)
 
     # Associated speech bubbles
     def create_speech_bubble():
@@ -1479,15 +1479,16 @@ def create_single_panel_metadata(panel,
         font_idx = np.random.randint(0, font_dataset_len)
         font = font_files[font_idx]
 
-        # Select a speech bubble and get it's writing areas
-        speech_bubble_file_idx = np.random.randint(
-            0,
-            speech_bubble_dataset_len
-        )
+        # Select a random language if language is paths.ALL_LANGUAGE
+        bubble_language = language
+        if language == paths.ALL_LANGUAGE:
+            supported = paths.LANGUAGES_SUPPORTED
+            bubble_language = supported[np.random.randint(0, len(supported))]
 
         # Open image and save its dimensions
         speech_bubble_writing_areas = []
-        speech_bubble_file = speech_bubble_files[speech_bubble_file_idx]
+        speech_bubble_index = np.random.randint(0, speech_bubbles_files)
+        speech_bubble_file = speech_bubble_files[speech_bubble_index]
         img = cv2.imread(speech_bubble_file)
         h, w, _ = img.shape
         padding = cfg.bubble_content_padding
@@ -1562,9 +1563,8 @@ def create_single_panel_metadata(panel,
                                          writing_areas=speech_bubble_writing_areas,
                                          location=(x, y),
                                          width=w,
-                                         language=language,
                                          height=h,
-                                         )
+                                         language=bubble_language)
             speech_bubbles_generated.append(speech_bubble)
             panel.speech_bubbles.append(speech_bubble)
             return speech_bubble
