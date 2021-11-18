@@ -74,7 +74,7 @@ if __name__ == '__main__':
                         default=paths.ENGLISH_LANGUAGE, type=str)
 
     parser.add_argument("--generate_pages", "-gp", nargs=1,
-                        type=int, help="Generate pages count", default=5)
+                        type=int, help="Generate pages count")
     parser.add_argument("--segmented", "-s",
                         action="store_true", default=False)
 
@@ -115,7 +115,15 @@ if __name__ == '__main__':
         convert_images_to_bw()
 
     if args.split_speech_bubbles:
-        split_speech_bubbles()
+        paths.makeFolders([paths.DATASET_IMAGES_UNSPLITTED_SPEECH_BUBBLES_SINGLE_FOLDER,
+                           paths.DATASET_IMAGES_UNSPLITTED_SPEECH_BUBBLES_MULTIPLE_FOLDER,
+                           paths.DATASET_IMAGES_SPEECH_BUBBLES_FOLDER])
+        print("Splitting single speech bubbles...")
+        split_speech_bubbles(
+            paths.DATASET_IMAGES_UNSPLITTED_SPEECH_BUBBLES_SINGLE_FOLDER, multiple=False)
+        print("Splitting multiple speech bubbles...")
+        split_speech_bubbles(
+            paths.DATASET_IMAGES_UNSPLITTED_SPEECH_BUBBLES_MULTIPLE_FOLDER, multiple=True)
 
     # Combines the above in case of small size
     if args.generate_pages is not None:
