@@ -11,7 +11,7 @@ boundary_width = 16
 
 # **Font coverage**
 # How many characters of the dataset should the font files support
-font_character_coverage = 0.80
+font_character_coverage = 0.76
 
 
 # **Panel Drawing**

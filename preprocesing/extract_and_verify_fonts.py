@@ -164,6 +164,7 @@ def verify_font_files():
     japanese_test_characters = ""
     english_test_characters = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz"
     # spanish_test_characters = english_test_characters + "ÁáÉéÍíÓóÚú"
+
     with open(paths.DATASET_FONTS_RENDER_TEST_FILE, "r", encoding="utf-8") as test_file:
         japanese_test_characters = test_file.readlines()[0]
     all_fonts = os.listdir(paths.DATASET_FONTS_FILES_FOLDER)
@@ -176,24 +177,24 @@ def verify_font_files():
     fonts_coverage = []
     print("Verifying fonts")
     for font_name in tqdm(all_fonts):
-        if font_name == ".DS_Store":
+        # Ignore files start with a dot
+        if font_name[0] == ".":
             continue
         font_path = paths.DATASET_FONTS_FILES_FOLDER + font_name
         try:
             font = TTFont(font_path)
+            english_char_count = 0
+            japanese_char_count = 0
+            for char in japanese_chars:
+                japanese_char_count += contains_char(font, char)
+            for char in english_chars:
+                english_char_count += contains_char(font, char)
+            japanese_coverage = japanese_char_count / japanese_total_chars
+            english_coverage = english_char_count / english_total_chars
+            fonts_coverage.append(
+                [font_path, japanese_coverage, english_coverage])
         except TTLibError as e:
-            print(font_path)
-
-        english_char_count = 0
-        japanese_char_count = 0
-        for char in japanese_chars:
-            japanese_char_count += contains_char(font, char)
-        for char in english_chars:
-            english_char_count += contains_char(font, char)
-
-        japanese_coverage = japanese_char_count / japanese_total_chars
-        english_coverage = english_char_count / english_total_chars
-        fonts_coverage.append([font_path, japanese_coverage, english_coverage])
+            print("ERROR in" + font_path + ": " + e)
 
     print("Writing viability to file: ", paths.DATASET_FONTS_VIABLE_FONTS_FILE)
     with open(paths.DATASET_FONTS_VIABLE_FONTS_FILE, "w+") as viable_font_file:
