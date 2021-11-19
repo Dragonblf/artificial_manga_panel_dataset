@@ -186,7 +186,7 @@ if __name__ == '__main__':
         except:
             pass
 
-        print("Running creation of metadata...")
+        print("Creating metadata...")
         pages = []
         paths.makeFolders(paths.GENERATED_FOLDER_PATHS)
         for i in tqdm(range(n)):

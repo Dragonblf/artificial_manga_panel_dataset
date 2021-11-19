@@ -4,25 +4,68 @@ import concurrent
 import cv2
 import paths
 import json
+import numpy as np
+from scipy import ndimage
 
 from tqdm import tqdm
-from .objects.page import Page
 from .. import config_file as cfg
 
 
 def get_panels_and_speech_bubbles(children, panels=[], speech_bubbles=[]):
+    def reshape(pts):
+        return np.array(pts, np.int32).reshape((-1, 1, 2))
+
     for panel in children:
         bubbles = panel["speech_bubbles"]
         coordinates = panel["coordinates"]
         panel_children = panel["children"]
-        if coordinates:
-            panels += [coordinates]
+
+        # Convert panel coordinates to cv2's points
+        if coordinates and panel["image"] is not None:
+            pts = [(round(p1[0]), round(p1[1]))
+                   for p1 in coordinates]
+            panels += [reshape(pts)]
+
+        # Convert speech bubble coordinates to cv2's points
         if bubbles:
-            speech_bubbles += bubbles
+            pts = []
+            for bubble in bubbles:
+                w, h = bubble["width"], bubble["height"]
+                x1, y1 = bubble["location"]
+                try:
+                    rotation = bubble["transform_metadata"]["rotation_amount"]
+                except:
+                    rotation = None
+                if rotation:
+                    # Create a empty rectangle and draw a rectangle
+                    image = np.zeros((h, w), np.uint8)
+                    cv2.rectangle(image, (0, 0), (w, h), (255), 4)
+
+                    # Rotate image
+                    image = ndimage.rotate(image, rotation)
+
+                    # Find contours of rotated rectangle
+                    contours, _ = cv2.findContours(
+                        cv2.threshold(image, 100, 255, cv2.THRESH_BINARY)[1],
+                        cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+                    # Translate rotated rectangle to speech_bubbles's (x1, y1)
+                    if contours:
+                        new_positions = []
+                        for position in contours[0]:
+                            x, y = position[0]
+                            new_positions.append([[x + x1, y + y1]])
+                        pts.append(reshape(new_positions))
+                else:
+                    x2, y2 = x1 + w, y1 + h
+                    new_pts = ((x1, y1), (x2, y1), (x2, y2), (x1, y2))
+                    pts.append(reshape(new_pts))
+            speech_bubbles += pts
+
+        # Append new elements to lists if it has children
         if panel_children:
             get_panels_and_speech_bubbles(
-                panel_children, panels,
-                speech_bubbles)
+                panel_children, panels, speech_bubbles)
 
 
 def create_segmented_page(name: str, data=None):
@@ -47,20 +90,13 @@ def create_segmented_page(name: str, data=None):
 
     panels = []
     speech_bubbles = []
-    get_panels_and_speech_bubbles(metadata["children"], panels, speech_bubbles)
+    get_panels_and_speech_bubbles(
+        metadata["children"], panels, speech_bubbles, )
 
     for coordinates in panels:
-        for i in range(1, len(coordinates)):
-            p1, p2 = coordinates[i - 1], coordinates[i]
-            p1 = (round(p1[0]), round(p1[1]))
-            p2 = (round(p2[0]), round(p2[1]))
-            cv2.line(img, p1, p2, (0, 255, 0), 4)
-    for bubble in speech_bubbles:
-        # TODO: Apply rotation
-        x, y = bubble["location"]
-        cv2.rectangle(img, (x, y),
-                      (x + bubble["width"], y + bubble["height"]),
-                      (255, 0, 0), 4)
+        cv2.drawContours(img, [coordinates], -1, (0, 255, 0), 4)
+    for coordinates in speech_bubbles:
+        cv2.drawContours(img, [coordinates], -1, (255, 0, 0), 4)
 
     cv2.imwrite(segmented_file, img)
 

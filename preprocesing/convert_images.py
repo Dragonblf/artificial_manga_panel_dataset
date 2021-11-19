@@ -52,10 +52,9 @@ def create_uuid_image_path():
 def save_contours(img, multiple=False):
     img_shape = img.shape
     img_grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    _, thresh_img = cv2.threshold(
-        img_grey, 100, 255, cv2.THRESH_BINARY)
     contours, _ = cv2.findContours(
-        thresh_img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.threshold(img_grey, 100, 255, cv2.THRESH_BINARY)[1],
+        cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
     empty = np.zeros((img_shape[0], img_shape[1], 4), dtype=np.uint8)
 

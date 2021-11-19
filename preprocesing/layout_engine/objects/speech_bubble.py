@@ -358,8 +358,11 @@ class SpeechBubble(object):
 
         # Perform rotation if it was in transforms
         if "rotate" in self.transforms:
+            center = (self.width / 2, self.height / 2)
             rotation = self.transform_metadata['rotation_amount']
-            bubble = bubble.rotate(rotation, Image.NEAREST, expand=1)
-            mask = mask.rotate(rotation, Image.NEAREST, expand=1)
+            bubble = bubble.rotate(rotation, Image.NEAREST,
+                                   expand=1, center=center)
+            mask = mask.rotate(rotation, Image.NEAREST,
+                               expand=1, center=center)
 
         return bubble, self.location
