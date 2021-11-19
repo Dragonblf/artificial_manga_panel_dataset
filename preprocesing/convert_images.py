@@ -49,13 +49,18 @@ def create_uuid_image_path():
     return paths.DATASET_IMAGES_SPEECH_BUBBLES_FOLDER + str(uuid.uuid1()) + ".png"
 
 
+def find_contours(img, threshold=100, mode=cv2.RETR_LIST):
+    _, thresh = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
+    # # Remove some small noise if any.
+    # dilate = cv2.dilate(thresh, None)
+    # erode = cv2.erode(dilate, None)
+    return cv2.findContours(thresh, mode, cv2.CHAIN_APPROX_SIMPLE)[0]
+
+
 def save_contours(img, multiple=False):
     img_shape = img.shape
     img_grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    contours, _ = cv2.findContours(
-        cv2.threshold(img_grey, 100, 255, cv2.THRESH_BINARY)[1],
-        cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-
+    contours = find_contours(img_grey)
     empty = np.zeros((img_shape[0], img_shape[1], 4), dtype=np.uint8)
 
     if not multiple:

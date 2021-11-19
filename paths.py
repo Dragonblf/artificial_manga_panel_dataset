@@ -67,7 +67,7 @@ GENERATED_FOLDER_PATHS = [GENERATED_METADATA_FOLDER,
                           GENERATED_IMAGES_FOLDER, GENERATED_SEGMENTED_FOLDER]
 
 
-def makeFolders(folders, remove=False):
+def makeFolders(folders: list, remove=False):
     for path in folders:
         if not os.path.exists(path):
             os.makedirs(path)
