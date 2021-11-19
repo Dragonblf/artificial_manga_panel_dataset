@@ -75,6 +75,13 @@ def get_panels_and_speech_bubbles(children, panels=[], speech_bubbles=[]):
                 panel_children, panels, speech_bubbles)
 
 
+def create_mask(img, shape, contour, color, filename):
+    shape = shape.copy()
+    cv2.drawContours(img, [contour], -1, color, 4)
+    cv2.drawContours(shape, [contour], -1, (255), cv2.FILLED)
+    cv2.imwrite(filename, shape)
+
+
 def create_segmented_page(name: str, data=None):
     """
     This function is used to render a single page from a metadata json file
@@ -93,29 +100,31 @@ def create_segmented_page(name: str, data=None):
     speech_bubble_masks = image_segmented_folder + "speech_bubbles/"
     segmented_file = image_segmented_folder + image_name
 
-    # paths.makeFolders([panels_masks, speech_bubble_masks])
+    paths.makeFolders([panels_masks, speech_bubble_masks])
 
     metadata = data
     if metadata is None:
         with open(metadata_file) as f:
             metadata = json.loads(f.read())
     img = cv2.imread(image_file)
-    img_grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img_shape = img.shape
+    empty = np.zeros((img_shape[0], img_shape[1]), np.uint8)
 
-    padding = 5
     panels = []
     speech_bubbles = []
     get_panels_and_speech_bubbles(metadata["children"], panels, speech_bubbles)
 
-    for contour in panels:
-        cv2.drawContours(img, [contour], -1, (0, 255, 0), 4)
-    for contour in speech_bubbles:
-        cv2.drawContours(img, [contour], -1, (255, 0, 0), 4)
-        # x, y, w, h = cv2.boundingRect(contour)
-        # cv2.rectangle(img, (x, y), (x + w, y + h), (0, 0, 255), 4)
+    for i, contour in enumerate(panels):
+        create_mask(img, empty, contour,
+                    color=(0, 255, 0),
+                    filename=panels_masks + str(i) + cfg.output_format)
+    for i, contour in enumerate(speech_bubbles):
+        create_mask(img, empty, contour,
+                    color=(255, 0, 0),
+                    filename=speech_bubble_masks + str(i) + cfg.output_format)
 
-    # cv2.imwrite(segmented_file, img)
-    cv2.imwrite(paths.GENERATED_SEGMENTED_FOLDER + image_name, img)
+    cv2.imwrite(segmented_file, img)
+    # cv2.imwrite(paths.GENERATED_SEGMENTED_FOLDER + image_name, img)
 
 
 def create_page(data):
