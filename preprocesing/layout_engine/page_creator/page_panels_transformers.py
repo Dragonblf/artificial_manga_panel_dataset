@@ -2,7 +2,7 @@ import numpy as np
 import math
 import random
 
-from .. import config_file as cfg
+from ... import config_file as cfg
 from .page_panels_shifters import *
 from ..helpers import (
     get_min_area_panels,

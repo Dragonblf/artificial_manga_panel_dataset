@@ -39,8 +39,8 @@ vertical_horizontal_ratios = {
 panel_transform_chance = 0.96
 
 # Panel shrinking
-
-panel_shrink_amount = -24
+min_panel_shrink_amount = -24
+max_panel_shrink_amount = -0
 
 # Panel removal
 panel_removal_chance = 0.012
@@ -50,9 +50,10 @@ panel_removal_max = 2
 background_add_chance = 0.012
 
 # **Speech bubbles**
-bubble_content_padding = 24
+min_speech_bubbles_per_panel = 0
 max_speech_bubbles_per_panel = 2
-min_speech_bubbles_per_panel = 1
+
+bubble_content_padding = 24
 bubble_to_panel_area_max_ratio = 0.48
 bubble_mask_x_increase = 16
 bubble_mask_y_increase = 16

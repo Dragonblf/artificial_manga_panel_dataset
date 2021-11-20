@@ -1,7 +1,7 @@
 import numpy as np
 import pyclipper
 
-from .. import config_file as cfg
+from ... import config_file as cfg
 from ..objects.page import Page
 from .create_speech_bubbles_metadata import create_speech_bubbles_metadata
 from .create_page_panels_base import create_page_panels_base
@@ -37,10 +37,11 @@ def shrink_panels(page):
         pco = pyclipper.PyclipperOffset()
         pco.AddPath(panel.get_polygon(),
                     pyclipper.JT_ROUND,
-                    pyclipper.ET_CLOSEDPOLYGON
-                    )
+                    pyclipper.ET_CLOSEDPOLYGON)
 
-        solution = pco.Execute(cfg.panel_shrink_amount)
+        shrink_amount = np.random.randint(
+            cfg.min_panel_shrink_amount, cfg.max_panel_shrink_amount)
+        solution = pco.Execute(shrink_amount)
 
         # Get the solutions
         changed_coords = []

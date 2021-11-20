@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import paths
 
-from .. import config_file as cfg
+from ... import config_file as cfg
 from ..objects.speech_bubble import SpeechBubble
 
 

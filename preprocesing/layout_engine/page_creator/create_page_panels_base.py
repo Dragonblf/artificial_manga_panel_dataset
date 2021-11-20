@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from .. import config_file as cfg
+from ... import config_file as cfg
 from ..objects.page import Page
 from .create_speech_bubbles_metadata import *
 from .page_panels_shifters import *
@@ -216,7 +216,7 @@ def create_page_panels_base(num_panels=0,
                     shift_min = 25
                     shift_max = 75
                     shift = np.random.randint(shift_min, shift_max)
-                    set_shift = shift/100
+                    set_shift = shift / 100
                 else:
                     # Divide each into 2 rectangles unequally
                     set_shift = None
@@ -240,7 +240,7 @@ def create_page_panels_base(num_panels=0,
                 draw_two_shifted(page.get_child(1), next_div)
 
                 # Pick one of all of them and divide into two
-                page_child_chosen = np.random.choice(page.children)
+                page_child_chosen = np.random.choice(page.children) 
                 choice_idx, left_choices = choose_and_return_other(
                     page_child_chosen
                 )
