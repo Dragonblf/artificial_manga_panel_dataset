@@ -4,20 +4,17 @@ import pandas as pd
 import os
 from tqdm import tqdm
 import paths
+
 from scraping.download_texts import download_and_extract_jesc
 from scraping.download_fonts import get_font_links
 from scraping.download_images import download_db_illustrations
 
 from preprocesing.speech_bubble_writing_area import create_speech_bubbles_writing_areas
 from preprocesing.text_dataset_format_changer import convert_jesc_to_dataframe
-from preprocesing.extract_and_verify_fonts import (
-    extract_fonts,
-    move_fonts,
-    verify_font_files
-)
+from preprocesing.extract_and_verify_fonts import extract_fonts, move_fonts, verify_font_files
 from preprocesing.convert_images import convert_images_to_bw, split_speech_bubbles
-from preprocesing.layout_engine.page_creator import render_pages, segment_pages
-from preprocesing.layout_engine.page_dataset_creator import create_page_metadata
+from preprocesing.layout_engine.pages_renderer import render_pages, segment_pages
+from preprocesing.layout_engine.page_creator.create_page_metadata import create_page_metadata
 
 
 if __name__ == '__main__':
@@ -129,7 +126,7 @@ if __name__ == '__main__':
     if args.generate_pages is not None:
         language = args.language
         if not language in paths.LANGUAGES_MODE_AVAILABLE:
-            raise Exception("That language is not avaible. Available " +
+            raise Exception("That language mode is not avaible. Available " +
                             str(paths.LANGUAGES_MODE_AVAILABLE))
 
         n = args.generate_pages[0]  # number of pages
