@@ -13,7 +13,8 @@ from preprocesing.speech_bubble_writing_area import create_speech_bubbles_writin
 from preprocesing.text_dataset_format_changer import convert_jesc_to_dataframe
 from preprocesing.extract_and_verify_fonts import extract_fonts, move_fonts, verify_font_files
 from preprocesing.convert_images import convert_images_to_bw, split_speech_bubbles
-from preprocesing.layout_engine.pages_renderer import render_pages, segment_pages
+from preprocesing.layout_engine.pages_renderer import render_pages
+from preprocesing.layout_engine.pages_segmenter import segment_pages
 from preprocesing.layout_engine.page_creator.create_page_metadata import create_page_metadata
 
 
