@@ -35,8 +35,11 @@ def get_panels_and_speech_bubbles(children, panels=[], speech_bubbles=[]):
 
         # Convert panel coordinates to cv2's points
         if coordinates and panel["image"] is not None:
-            pts = [(round(p1[0]), round(p1[1]))
-                   for p1 in coordinates]
+            pts = []
+            for p1 in coordinates:
+                p1 = round(p1[0]), round(p1[1])
+                if not p1 in pts:
+                    pts.append(p1)
             panels += [reshape_points(pts)]
 
         # Convert speech bubble coordinates to cv2's points
@@ -65,7 +68,7 @@ def get_panels_and_speech_bubbles(children, panels=[], speech_bubbles=[]):
 
                 # Translate rotated rectangle to speech_bubbles's (x1, y1)
                 contours = move_contours([contours[0]], (x1, y1))[0]
-                elements.append(contours)
+                elements.append((contours, bubble))
             speech_bubbles += elements
 
         # Append new elements to lists if it has children
@@ -74,11 +77,22 @@ def get_panels_and_speech_bubbles(children, panels=[], speech_bubbles=[]):
                 panel_children, panels, speech_bubbles)
 
 
-def create_mask(img, shape, contour, color, filename):
-    shape = shape.copy()
+def create_mask(img, shape, empty, contour, color, filename):
+    empty = empty.copy()
     cv2.drawContours(img, [contour], -1, color, 4)
+    cv2.drawContours(empty, [contour], -1, (255), cv2.FILLED)
     cv2.drawContours(shape, [contour], -1, (255), cv2.FILLED)
-    cv2.imwrite(filename, shape)
+    cv2.imwrite(filename, empty)
+
+
+def contour_to_annotation(contour):
+    x, y, w, h = cv2.boundingRect(contour)
+    return {
+        # "segmentation": contour.tolist(),
+        "segmentation": np.squeeze(contour).tolist(),
+        "area": cv2.contourArea(contour),
+        "box": [x, y, x + w, y + h],
+    }
 
 
 def create_segmented_page(name: str, data=None):
@@ -90,16 +104,18 @@ def create_segmented_page(name: str, data=None):
 
     :type name: srt
     """
-    image_name = name + cfg.output_format
+    PANELS_NAME = "panels"
+    SPEECH_BUBBLES_NAME = "speech_bubbles"
+    output = cfg.output_format
+    image_name = name + output
     image_file = paths.GENERATED_IMAGES_FOLDER + image_name
     metadata_file = paths.GENERATED_METADATA_FOLDER + name + cfg.metadata_format
 
-    image_segmented_folder = paths.GENERATED_SEGMENTED_FOLDER + name + "/"
-    panels_masks = image_segmented_folder + "panels/"
-    speech_bubble_masks = image_segmented_folder + "speech_bubbles/"
-    segmented_file = image_segmented_folder + image_name
+    folder = paths.GENERATED_SEGMENTED_FOLDER + name + "/"
+    panels_masks_folder = folder + PANELS_NAME + "/"
+    speech_bubble_masks_folder = folder + SPEECH_BUBBLES_NAME + "/"
 
-    paths.makeFolders([panels_masks, speech_bubble_masks])
+    paths.makeFolders([panels_masks_folder, speech_bubble_masks_folder])
 
     metadata = data
     if metadata is None:
@@ -108,22 +124,39 @@ def create_segmented_page(name: str, data=None):
     img = cv2.imread(image_file)
     img_shape = img.shape
     empty = np.zeros((img_shape[0], img_shape[1]), np.uint8)
+    panels_shape = empty.copy()
+    speech_bubbles_shape = empty.copy()
 
     panels = []
     speech_bubbles = []
     get_panels_and_speech_bubbles(metadata["children"], panels, speech_bubbles)
 
-    for i, contour in enumerate(panels):
-        create_mask(img, empty, contour,
-                    color=(0, 255, 0),
-                    filename=panels_masks + str(i) + cfg.output_format)
-    for i, contour in enumerate(speech_bubbles):
-        create_mask(img, empty, contour,
-                    color=(255, 0, 0),
-                    filename=speech_bubble_masks + str(i) + cfg.output_format)
+    annotations = {
+        PANELS_NAME: [],
+        SPEECH_BUBBLES_NAME: [],
+    }
 
-    cv2.imwrite(segmented_file, img)
-    cv2.imwrite(paths.GENERATED_SEGMENTED_FOLDER + image_name, img)
+    for i, contour in enumerate(panels):
+        anotation = contour_to_annotation(contour)
+        annotations[PANELS_NAME].append(anotation)
+        create_mask(img, panels_shape, empty, contour,
+                    color=(0, 255, 0),
+                    filename=panels_masks_folder + str(i) + output)
+    for i, speech_bubble in enumerate(speech_bubbles):
+        contour, _ = speech_bubble
+        anotation = contour_to_annotation(contour)
+        annotations[SPEECH_BUBBLES_NAME].append(anotation)
+        create_mask(img, speech_bubbles_shape, empty, contour,
+                    color=(255, 0, 0),
+                    filename=speech_bubble_masks_folder + str(i) + output)
+
+    cv2.imwrite(folder + "preview" + output, img)
+    cv2.imwrite(folder + PANELS_NAME + "_mask" + output, panels_shape)
+    cv2.imwrite(folder + SPEECH_BUBBLES_NAME + "_mask" + output,
+                speech_bubbles_shape)
+
+    with open(folder + 'annotations' + cfg.metadata_format, 'w+') as f:
+        json.dump(annotations, f)
 
 
 def segment_pages(pages):
