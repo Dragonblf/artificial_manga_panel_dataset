@@ -151,7 +151,7 @@ def create_segmented_page(name: str):
                 speech_bubbles_shape)
 
     annotator.save_json(annotations,
-                        folder + paths.GENERATED_annotator.ANNOTATIONS_FILENAME)
+                        folder + paths.GENERATED_ANNOTATIONS_FILENAME)
 
 
 def segment_pages(pages):

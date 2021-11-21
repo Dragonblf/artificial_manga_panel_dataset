@@ -5,12 +5,13 @@ import paths
 import os
 import json
 from tqdm import tqdm
+from .. import config_file as cfg
 
 
-ANNOTATIONS_PANELS_CATEGORY_NAME = "panels"
-ANNOTATIONS_PANELS_CATEGORY_INDEX = 1
 ANNOTATIONS_SPEECH_BUBBLES_CATEGORY_NAME = "speech_bubbles"
-ANNOTATIONS_SPEECH_BUBBLES_CATEGORY_INDEX = 0
+ANNOTATIONS_SPEECH_BUBBLES_CATEGORY_INDEX = 1
+ANNOTATIONS_PANELS_CATEGORY_NAME = "panels"
+ANNOTATIONS_PANELS_CATEGORY_INDEX = 2
 
 # Annotations dict keys
 ANNOTATIONS_IMAGE_FILE_NAME = "file_name"
@@ -18,17 +19,17 @@ ANNOTATIONS_IMAGE_WIDTH = "width"
 ANNOTATIONS_IMAGE_HEIGHT = "height"
 
 
-def open_json(path):
+def open_json(path: str):
     with open(path) as f:
         return json.loads(f.read())
 
 
-def save_json(dict, path):
+def save_json(dict: dict, path: str):
     with open(path, 'w+') as f:
         json.dump(dict, f)
 
 
-def contour_to_annotation(contour):
+def contour_to_annotation(contour: list):
     x, y, w, h = cv2.boundingRect(contour)
     return {
         "segmentation": np.squeeze(contour).tolist(),
@@ -43,7 +44,7 @@ def contour_annotation_to_coco_annotation(annotation, annotation_id, image_id, c
         "image_id": image_id,
         "category_id": category_id,
         "segmentation": [
-            np.squeeze(annotation["segmentation"]).tolist()
+            np.array(annotation["segmentation"]).flatten().tolist()
         ],
         "area": annotation["area"],
         "bbox": annotation["box"],
@@ -64,8 +65,12 @@ def create_coco_annotations_from_segmentations():
     for filename in tqdm(folders):
         folder = segmented_folder + filename
         if os.path.isdir(folder):
-            annotations_file = folder + "/" + paths.GENERATED_ANNOTATIONS_FILENAME
-            if os.path.exists(annotations_file):
+            annotations_file = os.path.join(
+                folder, paths.GENERATED_ANNOTATIONS_FILENAME)
+            image_file_name = filename + cfg.output_format
+            image_file = os.path.join(
+                paths.GENERATED_IMAGES_FOLDER, image_file_name)
+            if os.path.exists(annotations_file) and os.path.exists(image_file):
                 def append_annotation(contours, category_id, annotation_id):
                     annotations_counter = annotation_id
                     for contour in contours:
@@ -92,7 +97,7 @@ def create_coco_annotations_from_segmentations():
                     "id": image_counter,
                     "width": annotation[ANNOTATIONS_IMAGE_WIDTH],
                     "height": annotation[ANNOTATIONS_IMAGE_HEIGHT],
-                    "file_name": annotation[ANNOTATIONS_IMAGE_FILE_NAME],
+                    "file_name": image_file_name,
                     "license": 0,
                     "flickr_url": "",
                     "coco_url": "",
@@ -110,11 +115,11 @@ def create_coco_annotations_from_segmentations():
         ],
         "info": {
             "contributor": "Luis Felipe Murguia Ramos",
+            "url": "https://github.com/seel-channel/artificial_manga_panel_dataset",
             "date_created": "",
             "description": "",
-            "url": "https://github.com/seel-channel/artificial_manga_panel_dataset",
             "version": "",
-            "year": "2021"
+            "year": ""
         },
         "categories": [
             {
@@ -132,5 +137,5 @@ def create_coco_annotations_from_segmentations():
         "annotations": annotations
     }
 
-    save_json(paths.GENERATED_FOLDER + "coco_" +
-              paths.GENERATED_ANNOTATIONS_FILENAME, coco)
+    save_json(coco, paths.GENERATED_FOLDER + "coco_" +
+              paths.GENERATED_ANNOTATIONS_FILENAME)
