@@ -5,6 +5,8 @@ import paths
 from ... import config_file as cfg
 from ..objects.speech_bubble import SpeechBubble
 
+MAX_ATTEMPS = 5
+
 
 def create_speech_bubble_metadata(panel,
                                   speech_bubble,
@@ -88,7 +90,7 @@ def create_speech_bubble_metadata(panel,
                                      language=bubble_language)
         speech_bubbles_generated.append(speech_bubble)
         panel.speech_bubbles.append(speech_bubble)
-    elif attempt < 5:
+    elif attempt < MAX_ATTEMPS:
         create_speech_bubble_metadata(panel,
                                       speech_bubble,
                                       speech_bubbles_generated,

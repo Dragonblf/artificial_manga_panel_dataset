@@ -1,5 +1,63 @@
 import numpy as np
+import pyclipper
 from ..objects.panel import Panel
+from ... import config_file as cfg
+from ..helpers import get_leaf_panels
+
+
+def shrink_panels(page):
+    """
+    A function that uses the pyclipper library]
+    to reduce the size of the panel polygon
+
+    :param page: Page whose panels are to be
+    shrunk
+
+    :type page: Page
+
+    :return: Page with shrunk panels
+
+    :rtype: Page
+    """
+
+    panels = []
+    if len(page.leaf_children) < 1:
+        get_leaf_panels(page, panels)
+        page.leaf_children = panels
+    else:
+        panels = page.leaf_children
+
+    # For each panel
+    for panel in panels:
+        # Shrink them
+        pco = pyclipper.PyclipperOffset()
+        pco.AddPath(panel.get_polygon(),
+                    pyclipper.JT_ROUND,
+                    pyclipper.ET_CLOSEDPOLYGON)
+
+        shrink_amount = np.random.randint(
+            cfg.min_panel_shrink_amount, cfg.max_panel_shrink_amount)
+        solution = pco.Execute(shrink_amount)
+
+        # Get the solutions
+        changed_coords = []
+        if len(solution) > 0:
+            for item in solution[0]:
+                changed_coords.append(tuple(item))
+
+            changed_coords.append(changed_coords[0])
+
+            # Assign them
+            panel.coords = changed_coords
+            panel.x1y1 = changed_coords[0]
+            panel.x2y2 = changed_coords[1]
+            panel.x3y3 = changed_coords[2]
+            panel.x4y4 = changed_coords[3]
+        else:
+            # Assign them as is if there are no solutions
+            pass
+
+    return page
 
 
 def draw_n_shifted(n, parent, horizontal_vertical, shifts=[]):
