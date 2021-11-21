@@ -137,5 +137,7 @@ def create_coco_annotations_from_segmentations():
         "annotations": annotations
     }
 
-    save_json(coco, paths.GENERATED_FOLDER + "coco_" +
-              paths.GENERATED_ANNOTATIONS_FILENAME)
+    save_json(coco, paths.GENERATED_FOLDER +
+              paths.GENERATED_COCO_ANNOTATIONS_FILENAME)
+
+    return coco

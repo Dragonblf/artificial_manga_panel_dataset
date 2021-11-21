@@ -17,6 +17,7 @@ from preprocesing.layout_engine.pages_renderer import render_pages
 from preprocesing.layout_engine.pages_segmenter import segment_pages
 from preprocesing.layout_engine.page_creator.create_page_metadata import create_page_metadata
 from preprocesing.layout_engine.pages_annotator import create_coco_annotations_from_segmentations
+from preprocesing.zip_compressor import zip_files
 
 
 if __name__ == '__main__':
@@ -78,7 +79,7 @@ if __name__ == '__main__':
     parser.add_argument("--segmented", "-s",
                         action="store_true", default=False)
 
-    parser.add_argument("--annotations", "-a",
+    parser.add_argument("--create_annotations", "-ca",
                         action="store_true", default=False)
 
     parser.add_argument("--dry", action="store_true", default=False)
@@ -210,9 +211,15 @@ if __name__ == '__main__':
             print("Segmentanting images...")
             segment_pages(pages)
 
-    if args.annotations:
+    if args.create_annotations:
         print("Creating annotations...")
-        create_coco_annotations_from_segmentations()
+        annotations = create_coco_annotations_from_segmentations()
+        print("Zipping dataset...")
+        image_paths = [os.path.join(paths.GENERATED_IMAGES_FOLDER, image["file_name"])
+                       for image in annotations["images"]]
+        image_paths.append(os.path.join(paths.GENERATED_FOLDER,
+                                        paths.GENERATED_COCO_ANNOTATIONS_FILENAME))
+        zip_files(image_paths, paths.GENERATED_FOLDER + "dataset.zip")
 
     if args.run_tests:
         pytest.main([

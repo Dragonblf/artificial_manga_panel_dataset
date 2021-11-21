@@ -1,24 +1,13 @@
 import os
 import concurrent.futures
-import zipfile
 import dask.dataframe as dd
 import itertools
 from fontTools.ttLib import TTFont, TTLibError
 from tqdm import tqdm
 from . import config_file as cfg
+from .zip_compressor import unzip_file
 from pathlib import Path
 import paths
-
-
-def unzip_file(paths):
-    """
-    Unzip a file
-    :param paths: Path to unzip file from and to
-
-    :type paths: list
-    """
-    with zipfile.ZipFile(paths[0], 'r') as zip_ref:
-        zip_ref.extractall(paths[1])
 
 
 def extract_fonts():
@@ -35,7 +24,8 @@ def extract_fonts():
                  for filename in files]
 
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        _ = list(tqdm(executor.map(unzip_file, filepaths), total=len(filepaths)))
+        _ = list(tqdm(executor.map(lambda path: unzip_file(
+            path[0], path[1]), filepaths), total=len(filepaths)))
 
 
 def move_files(paths):
