@@ -2,12 +2,12 @@ import os
 import cv2
 from tqdm import tqdm
 from PIL import Image
-import concurrent.futures
 import numpy as np
 import paths
 import uuid
 from pdf2image import convert_from_path
 from io import BytesIO
+from .multiprocessing import open_pool
 
 
 def convert_single_image(image_path):
@@ -25,18 +25,16 @@ def convert_images_to_bw():
     Concurrently and in parallel convert the anime
     illustration images to black and white
     """
-    print("Converting images to black and white")
+    print("Converting images to black and white...")
     image_folders = os.listdir(paths.DATASET_IMAGES_DANBOORU_IMAGES_FOLDER)
-    for folder in tqdm(image_folders):
+    for folder in image_folders:
         folder_path = paths.DATASET_IMAGES_DANBOORU_IMAGES_FOLDER + folder + "/"
         if os.path.isdir(folder_path):
             image_paths = [folder_path + image
                            for image in os.listdir(folder_path)
                            if image.endswith(".jpg")]
 
-            # Since image processing is CPU and IO intensive
-            with concurrent.futures.ProcessPoolExecutor() as executor:
-                results = executor.map(convert_single_image, image_paths)
+            open_pool(convert_single_image, image_paths)
 
 
 def fill_speech_bubble(img, contours):
@@ -51,9 +49,6 @@ def create_uuid_image_path():
 
 def find_contours(img, threshold=100, mode=cv2.RETR_LIST):
     _, thresh = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
-    # # Remove some small noise if any.
-    # dilate = cv2.dilate(thresh, None)
-    # erode = cv2.erode(dilate, None)
     return cv2.findContours(thresh, mode, cv2.CHAIN_APPROX_SIMPLE)[0]
 
 
@@ -82,21 +77,26 @@ def save_contours(img, multiple=False):
                 cv2.imwrite(create_uuid_image_path(), shape)
 
 
+def _split_single_image(data):
+    filename, folder, multiple = data
+    if ".pdf" in filename:
+        pages = convert_from_path(folder + filename)
+        for page in pages:
+            with BytesIO() as f:
+                page.save(f, format="png")
+                f.seek(0)
+                file_bytes = np.asarray(
+                    bytearray(f.read()), dtype=np.uint8)
+                img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+                save_contours(img, multiple=multiple)
+                break
+    else:
+        img = cv2.imread(folder + filename)
+        save_contours(img, multiple=multiple)
+
+
 def split_speech_bubbles(folder, multiple=False):
     images = os.listdir(folder)
-    for i in tqdm(range(len(images))):
-        filename = images[i]
-        if ".pdf" in filename:
-            pages = convert_from_path(folder + filename)
-            for page in pages:
-                with BytesIO() as f:
-                    page.save(f, format="png")
-                    f.seek(0)
-                    file_bytes = np.asarray(
-                        bytearray(f.read()), dtype=np.uint8)
-                    img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
-                    save_contours(img, multiple=multiple)
-                    break
-        else:
-            img = cv2.imread(folder + images[i])
-            save_contours(img, multiple=multiple)
+    data = [(filename, folder, multiple)
+            for filename in images]
+    open_pool(_split_single_image, data)

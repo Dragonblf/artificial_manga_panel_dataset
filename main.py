@@ -147,6 +147,8 @@ if __name__ == '__main__':
         texts = pd.read_parquet(
             paths.DATASET_TEXT_JESC_DIALOGUES_FOLDER)
         images = os.listdir(images_folder)
+        images = [images_folder + filename
+                  for filename in images]
         speech_bubbles = os.listdir(bubbles_folder)
         speech_bubbles = [bubbles_folder + filename
                           for filename in speech_bubbles]

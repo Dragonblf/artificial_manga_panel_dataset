@@ -1,4 +1,3 @@
-import concurrent
 
 import cv2
 import paths
@@ -9,6 +8,7 @@ from tqdm import tqdm
 from .. import config_file as cfg
 from ..convert_images import find_contours
 from . import pages_annotator as annotator
+from ..multiprocessing import open_pool
 
 
 def move_contours(contours, xy: list):
@@ -155,6 +155,4 @@ def create_segmented_page(name: str):
 
 def segment_pages(pages):
     segmented_names = [page.name for page in pages]
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        _ = list(tqdm(executor.map(create_segmented_page, segmented_names),
-                      total=len(segmented_names)))
+    open_pool(create_segmented_page, segmented_names)

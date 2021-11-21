@@ -1,10 +1,8 @@
 import os
-import concurrent
-
 import paths
 
-from tqdm import tqdm
 from .. import config_file as cfg
+from ..multiprocessing import open_pool
 
 
 def create_page(data):
@@ -32,6 +30,4 @@ def render_pages(pages, dry=False):
     :param pages: A list of Page object
     """
     filenames = [(page, dry) for page in pages]
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        _ = list(tqdm(executor.map(create_page, filenames),
-                      total=len(filenames)))
+    open_pool(create_page, filenames)

@@ -8,6 +8,7 @@ from . import config_file as cfg
 from .zip_compressor import unzip_file
 from pathlib import Path
 import paths
+from .multiprocessing import open_pool
 
 
 def extract_fonts():
@@ -23,9 +24,7 @@ def extract_fonts():
     filepaths = [(paths.DATASET_FONTS_ZIPPED_FOLDER + filename, unzipped)
                  for filename in files]
 
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        _ = list(tqdm(executor.map(lambda path: unzip_file(
-            path[0], path[1]), filepaths), total=len(filepaths)))
+    open_pool(lambda path: unzip_file(path[0], path[1]), filepaths)
 
 
 def move_files(paths):
@@ -61,9 +60,7 @@ def move_fonts():
                             for font_path in font_files]
 
     print("Moving fonts...")
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        _ = list(tqdm(executor.map(move_files, font_files_and_paths),
-                 total=len(font_files_and_paths)))
+    open_pool(move_files, font_files_and_paths)
 
     # Clean up the folder
     # print("Deleting unzipped and zipped folders...")

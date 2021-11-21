@@ -7,15 +7,7 @@ from .create_speech_bubbles_metadata import create_speech_bubble_metadata
 from .create_page_panels_base import create_page_panels_base
 from .page_panels_transformers import add_transforms
 from ..helpers import get_leaf_panels
-import multiprocessing as mp
-
-
-def open_pool(func, iterable):
-    elements = []
-    with mp.Pool(processes=8) as pool:
-        for e in tqdm(pool.imap_unordered(func, iterable), total=len(iterable)):
-            elements.append(e)
-    return elements
+from ...multiprocessing import open_pool
 
 
 def shrink_panels(page):
@@ -193,28 +185,22 @@ def create_single_page_metadata(data):
     :rtype: Page
     """
 
-    images_folder = paths.DATASET_IMAGES_FILES_FOLDER
     page, panels, background, language = data
     speech_bubbles_generated = []
 
     for panel in panels:
         child, image, speech_bubbles = panel
-        child.image = images_folder + image
+        child.image = image
         for speech_bubble in speech_bubbles:
             create_speech_bubble_metadata(child,
                                           speech_bubble,
                                           speech_bubbles_generated,
-                                          language,
-                                          )
+                                          language)
 
     if np.random.random() < cfg.panel_removal_chance:
         page = remove_panel(page)
-
-    if background is not None:
-        page.background = images_folder + background
-
+    page.background = background
     page.dump_data(paths.GENERATED_METADATA_FOLDER, dry=False)
-
     return page
 
 
@@ -253,7 +239,7 @@ def create_pages_metadata(n,
                 bubble_image = speech_bubbles[speech_bubble_index]
                 font = fonts[font_index]
                 for area in no_empty_writing_areas:
-                    if area["path"] == bubble_image:
+                    if bubble_image == area["path"]:
                         text_index = np.random.randint(0, texts_len)
                         text_indices.append(text_index)
                         texts.append(texts_iloc[text_index])

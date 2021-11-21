@@ -50,7 +50,7 @@ panel_removal_max = 2
 background_add_chance = 0.012
 
 # **Speech bubbles**
-min_speech_bubbles_per_panel = 1
+min_speech_bubbles_per_panel = 0
 max_speech_bubbles_per_panel = 2
 
 bubble_content_padding = 24
