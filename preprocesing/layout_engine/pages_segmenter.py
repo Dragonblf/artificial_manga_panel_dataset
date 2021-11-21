@@ -82,7 +82,7 @@ def create_mask(img, shape, empty, contour, color, filename):
     cv2.drawContours(img, [contour], -1, color, 4)
     cv2.drawContours(empty, [contour], -1, (255), cv2.FILLED)
     cv2.drawContours(shape, [contour], -1, (255), cv2.FILLED)
-    cv2.imwrite(filename, empty)
+    cv2.imwrite(filename, empty, cfg.cv2_compression)
 
 
 def create_segmented_page(name: str):
@@ -143,11 +143,11 @@ def create_segmented_page(name: str):
                     color=(255, 0, 0),
                     filename=speech_bubble_masks_folder + str(i) + output)
 
-    cv2.imwrite(folder + "preview" + output, img)
+    cv2.imwrite(folder + "preview" + output, img, cfg.cv2_compression)
     cv2.imwrite(folder + panels_category +
-                "_mask" + output, panels_shape)
+                "_mask" + output, panels_shape, cfg.cv2_compression)
     cv2.imwrite(folder + speech_bubbles_cateogy + "_mask" + output,
-                speech_bubbles_shape)
+                speech_bubbles_shape, cfg.cv2_compression)
 
     annotator.save_json(annotations,
                         folder + paths.GENERATED_ANNOTATIONS_FILENAME)

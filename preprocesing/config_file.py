@@ -1,11 +1,18 @@
+import cv2
+
 # **Page rendering**
 page_width = 1600
 page_height = 2400
 
 page_size = (page_width, page_height)
 
-output_format = ".png"
+output_format = ".jpg"
 metadata_format = ".json"
+
+compression_quality = 72
+cv2_compression = [int(cv2.IMWRITE_JPEG_QUALITY), compression_quality]
+pil_compression = "JPEG"
+
 
 boundary_width = 16
 

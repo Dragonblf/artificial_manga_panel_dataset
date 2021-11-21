@@ -20,7 +20,8 @@ def create_page(data):
     filename = paths.GENERATED_IMAGES_FOLDER + page.name + cfg.output_format
     if not os.path.isfile(filename) and not dry:
         img = page.render(show=False)
-        img.convert("L").save(filename)
+        img.convert("L").save(filename, cfg.pil_compression,
+                              optimize=True, quality=cfg.compression_quality)
 
 
 def render_pages(pages, dry=False):
