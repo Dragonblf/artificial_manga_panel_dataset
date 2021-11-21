@@ -1,4 +1,5 @@
 import os
+from .preprocesing import config_file as cfg
 
 # Languages
 ENGLISH_LANGUAGE = "English"
@@ -62,6 +63,9 @@ GENERATED_FOLDER = "generated/"
 GENERATED_IMAGES_FOLDER = GENERATED_FOLDER + "images/"
 GENERATED_METADATA_FOLDER = GENERATED_FOLDER + "metadata/"
 GENERATED_SEGMENTED_FOLDER = GENERATED_FOLDER + "segmented/"
+
+GENERATED_ANNOTATIONS_FILENAME = "annotations" + cfg.metadata_format
+
 
 GENERATED_FOLDER_PATHS = [GENERATED_METADATA_FOLDER,
                           GENERATED_IMAGES_FOLDER, GENERATED_SEGMENTED_FOLDER]

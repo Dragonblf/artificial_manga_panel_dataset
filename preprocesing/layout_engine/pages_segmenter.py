@@ -9,6 +9,7 @@ from scipy import ndimage
 from tqdm import tqdm
 from .. import config_file as cfg
 from ..convert_images import find_contours
+from . import pages_annotator as annotator
 
 
 def move_contours(contours, xy: list):
@@ -85,17 +86,7 @@ def create_mask(img, shape, empty, contour, color, filename):
     cv2.imwrite(filename, empty)
 
 
-def contour_to_annotation(contour):
-    x, y, w, h = cv2.boundingRect(contour)
-    return {
-        # "segmentation": contour.tolist(),
-        "segmentation": np.squeeze(contour).tolist(),
-        "area": cv2.contourArea(contour),
-        "box": [x, y, x + w, y + h],
-    }
-
-
-def create_segmented_page(name: str, data=None):
+def create_segmented_page(name: str):
     """
     This function is used to render a single page from a metadata json file
     to a target location.
@@ -104,23 +95,21 @@ def create_segmented_page(name: str, data=None):
 
     :type name: srt
     """
-    PANELS_NAME = "panels"
-    SPEECH_BUBBLES_NAME = "speech_bubbles"
+
     output = cfg.output_format
     image_name = name + output
     image_file = paths.GENERATED_IMAGES_FOLDER + image_name
     metadata_file = paths.GENERATED_METADATA_FOLDER + name + cfg.metadata_format
 
+    panels_category = annotator.ANNOTATIONS_PANELS_CATEGORY_NAME
+    speech_bubbles_cateogy = annotator.ANNOTATIONS_SPEECH_BUBBLES_CATEGORY_NAME
     folder = paths.GENERATED_SEGMENTED_FOLDER + name + "/"
-    panels_masks_folder = folder + PANELS_NAME + "/"
-    speech_bubble_masks_folder = folder + SPEECH_BUBBLES_NAME + "/"
+    panels_masks_folder = folder + panels_category + "/"
+    speech_bubble_masks_folder = folder + speech_bubbles_cateogy + "/"
 
     paths.makeFolders([panels_masks_folder, speech_bubble_masks_folder])
 
-    metadata = data
-    if metadata is None:
-        with open(metadata_file) as f:
-            metadata = json.loads(f.read())
+    metadata = annotator.open_json(metadata_file)
     img = cv2.imread(image_file)
     img_shape = img.shape
     empty = np.zeros((img_shape[0], img_shape[1]), np.uint8)
@@ -132,31 +121,37 @@ def create_segmented_page(name: str, data=None):
     get_panels_and_speech_bubbles(metadata["children"], panels, speech_bubbles)
 
     annotations = {
-        PANELS_NAME: [],
-        SPEECH_BUBBLES_NAME: [],
+        annotator.ANNOTATIONS_IMAGE_WIDTH: img_shape[1],
+        annotator.ANNOTATIONS_IMAGE_HEIGHT: img_shape[0],
+        annotator.ANNOTATIONS_IMAGE_FILE_NAME: image_file,
+        panels_category: [],
+        speech_bubbles_cateogy: [],
     }
 
     for i, contour in enumerate(panels):
-        anotation = contour_to_annotation(contour)
-        annotations[PANELS_NAME].append(anotation)
+        anotation = annotator.contour_to_annotation(contour)
+        annotations[panels_category].append(
+            anotation)
         create_mask(img, panels_shape, empty, contour,
                     color=(0, 255, 0),
                     filename=panels_masks_folder + str(i) + output)
     for i, speech_bubble in enumerate(speech_bubbles):
         contour, _ = speech_bubble
-        anotation = contour_to_annotation(contour)
-        annotations[SPEECH_BUBBLES_NAME].append(anotation)
+        anotation = annotator.contour_to_annotation(contour)
+        annotations[speech_bubbles_cateogy].append(
+            anotation)
         create_mask(img, speech_bubbles_shape, empty, contour,
                     color=(255, 0, 0),
                     filename=speech_bubble_masks_folder + str(i) + output)
 
     cv2.imwrite(folder + "preview" + output, img)
-    cv2.imwrite(folder + PANELS_NAME + "_mask" + output, panels_shape)
-    cv2.imwrite(folder + SPEECH_BUBBLES_NAME + "_mask" + output,
+    cv2.imwrite(folder + panels_category +
+                "_mask" + output, panels_shape)
+    cv2.imwrite(folder + speech_bubbles_cateogy + "_mask" + output,
                 speech_bubbles_shape)
 
-    with open(folder + 'annotations' + cfg.metadata_format, 'w+') as f:
-        json.dump(annotations, f)
+    annotator.save_json(annotations,
+                        folder + paths.GENERATED_annotator.ANNOTATIONS_FILENAME)
 
 
 def segment_pages(pages):

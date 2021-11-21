@@ -16,6 +16,7 @@ from preprocesing.convert_images import convert_images_to_bw, split_speech_bubbl
 from preprocesing.layout_engine.pages_renderer import render_pages
 from preprocesing.layout_engine.pages_segmenter import segment_pages
 from preprocesing.layout_engine.page_creator.create_page_metadata import create_page_metadata
+from preprocesing.layout_engine.pages_annotator import create_coco_annotations_from_segmentations
 
 
 if __name__ == '__main__':
@@ -73,10 +74,15 @@ if __name__ == '__main__':
 
     parser.add_argument("--generate_pages", "-gp", nargs=1,
                         type=int, help="Generate pages count")
+
     parser.add_argument("--segmented", "-s",
                         action="store_true", default=False)
 
+    parser.add_argument("--annotations", "-a",
+                        action="store_true", default=False)
+
     parser.add_argument("--dry", action="store_true", default=False)
+
     parser.add_argument("--run_tests", action="store_true")
 
     args = parser.parse_args()
@@ -203,6 +209,10 @@ if __name__ == '__main__':
         if args.segmented:
             print("Segmentanting images...")
             segment_pages(pages)
+
+    if args.annotations:
+        print("Creating annotations...")
+        create_coco_annotations_from_segmentations()
 
     if args.run_tests:
         pytest.main([
