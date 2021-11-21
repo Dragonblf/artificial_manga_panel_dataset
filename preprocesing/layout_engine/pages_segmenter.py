@@ -2,7 +2,6 @@ import concurrent
 
 import cv2
 import paths
-import json
 import numpy as np
 from scipy import ndimage
 

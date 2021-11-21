@@ -2,8 +2,8 @@ import pytest
 from argparse import ArgumentParser
 import pandas as pd
 import os
-from tqdm import tqdm
 import paths
+from preprocesing import speech_bubble_writing_area
 
 from scraping.download_texts import download_and_extract_jesc
 from scraping.download_fonts import get_font_links
@@ -15,7 +15,7 @@ from preprocesing.extract_and_verify_fonts import extract_fonts, move_fonts, ver
 from preprocesing.convert_images import convert_images_to_bw, split_speech_bubbles
 from preprocesing.layout_engine.pages_renderer import render_pages
 from preprocesing.layout_engine.pages_segmenter import segment_pages
-from preprocesing.layout_engine.page_creator.create_page_metadata import create_page_metadata
+from preprocesing.layout_engine.page_creator.create_page_metadata import create_pages_metadata
 from preprocesing.layout_engine.pages_annotator import create_coco_annotations_from_segmentations
 from preprocesing.zip_compressor import zip_files
 
@@ -144,16 +144,16 @@ if __name__ == '__main__':
         generated_metadata_folder = paths.GENERATED_METADATA_FOLDER
 
         print("Loading texts in " + language + "...")
-        texts_dataset = pd.read_parquet(
+        texts = pd.read_parquet(
             paths.DATASET_TEXT_JESC_DIALOGUES_FOLDER)
-        image_dir = os.listdir(images_folder)
-        speech_bubble_files = os.listdir(bubbles_folder)
-        speech_bubble_files = [bubbles_folder + filename
-                               for filename in speech_bubble_files]
+        images = os.listdir(images_folder)
+        speech_bubbles = os.listdir(bubbles_folder)
+        speech_bubbles = [bubbles_folder + filename
+                          for filename in speech_bubbles]
 
         # Load viable fonts for selected language
         print("Loading fonts...")
-        viable_font_files = []
+        fonts = []
         try:
             with open(paths.DATASET_FONTS_VIABLE_FONTS_FILE) as f:
                 for line in f.readlines():
@@ -168,19 +168,19 @@ if __name__ == '__main__':
                     elif language == paths.JAPANASE_LANGUAGE:
                         append_font = japanese_viable
                     if append_font:
-                        viable_font_files.append(path)
+                        fonts.append(path)
                 f.close()
         except:
             pass
 
         # Load speech bubbles writing areas
         print("Loading writing areas...")
-        writing_areas = []
+        speech_bubbles_writing_areas = []
         try:
             with open(paths.DATASET_IMAGES_SPEECH_BUBBLES_WRITING_AREAS_FILE) as f:
                 for line in f.readlines():
                     path, x, y, w, h = line.split(",")
-                    writing_areas.append({
+                    speech_bubbles_writing_areas.append({
                         "path": path,
                         "width": int(w),
                         "height": int(h),
@@ -192,18 +192,14 @@ if __name__ == '__main__':
             pass
 
         print("Creating metadata...")
-        pages = []
         paths.makeFolders(paths.GENERATED_FOLDER_PATHS)
-        for i in tqdm(range(n)):
-            page = create_page_metadata(image_dir,
-                                        images_folder,
-                                        viable_font_files,
-                                        texts_dataset,
-                                        speech_bubble_files,
-                                        writing_areas,
-                                        language)
-            page.dump_data(generated_metadata_folder, dry=False)
-            pages.append(page)
+        pages = create_pages_metadata(n,
+                                      images,
+                                      fonts,
+                                      texts,
+                                      speech_bubbles,
+                                      speech_bubbles_writing_areas,
+                                      language)
 
         print("Rendering images...")
         render_pages(pages, dry=args.dry)
