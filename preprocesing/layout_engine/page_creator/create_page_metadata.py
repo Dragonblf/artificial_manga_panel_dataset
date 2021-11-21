@@ -1,6 +1,6 @@
 import numpy as np
 import paths
-from .create_speech_bubbles_metadata import create_speech_bubble_metadata, MAX_ATTEMPS
+from .create_speech_bubbles_metadata import create_speech_bubble_metadata
 from .create_page_panels_base import create_page_panels_base
 from .page_panels_transformers import add_transforms
 from .page_panels_shifters import shrink_panels
@@ -77,7 +77,7 @@ def create_single_page_metadata(data):
 
 
 def create_inital_page_metadata(data):
-    images_len, fonts_len = data
+    images_len, fonts_len, speech_bubbles_len = data
     random = np.random
 
     # Create page base
@@ -114,7 +114,8 @@ def create_inital_page_metadata(data):
         # Select image, font and text of speech bubble
         for __ in range(num_speech_bubbles):
             font_index = random.randint(0, fonts_len)
-            speech_bubbles.append((font_index))
+            speech_bubble_index = np.random.randint(0, speech_bubbles_len)
+            speech_bubbles.append((font_index, speech_bubble_index))
         panels.append((panel if page.num_panels > 1 else page,
                       image_index, speech_bubbles))
 
@@ -126,15 +127,45 @@ def preprocess_metadata(random_indexes,
                         fonts,
                         texts,
                         speech_bubbles,
-                        speech_bubbles_writing_areas,
+                        no_empty_writing_areas,
                         language):
 
-    speech_bubbles_len = len(speech_bubbles)
     texts_len = len(texts)
     texts_iloc = texts.iloc
+    preprocessed_metadata = []
 
-    # Create writin areas map for each element.
-    # This allows no iterate in every speech bubble
+    # Select image, fonts and texts from previously generated indexes
+    for page, panels, background_index in random_indexes:
+        new_panels = []
+        for panel, image_index, bubbles in panels:
+            new_speech_bubbles = []
+            for font_index, speech_bubble_index in bubbles:
+                texts, text_indices, writing_areas = [], [], []
+                bubble_image = speech_bubbles[speech_bubble_index]
+                font = fonts[font_index]
+                for area in no_empty_writing_areas[bubble_image]:
+                    text_index = np.random.randint(0, texts_len)
+                    text_indices.append(text_index)
+                    texts.append(texts_iloc[text_index])
+                    writing_areas.append(area)
+                new_speech_bubbles.append((bubble_image, font, texts,
+                                           text_indices, writing_areas))
+            new_panels.append((panel, images[image_index], new_speech_bubbles))
+        background = images[background_index] if background_index is not None else None
+        preprocessed_metadata.append((page, new_panels, background, language))
+
+    return preprocessed_metadata
+
+
+def create_pages_metadata(n,
+                          images,
+                          fonts,
+                          texts,
+                          speech_bubbles,
+                          speech_bubbles_writing_areas,
+                          language):
+
+    # Validate speech_bubbles without empty area
     padding = cfg.bubble_content_padding
     no_empty_writing_areas = {}
     for area in speech_bubbles_writing_areas:
@@ -145,58 +176,17 @@ def preprocess_metadata(random_indexes,
             else:
                 no_empty_writing_areas[path] = [area]
 
-    # Select image, fonts and texts from previously generated indexes
-    metadata_data = []
-    for page, panels, background_index in random_indexes:
-        new_panels = []
-        for panel, image_index, bubbles in panels:
-            new_speech_bubbles = []
-            for font_index in bubbles:
-
-                def select_speech_bubble():
-                    texts, text_indices, writing_areas = [], [], []
-                    speech_bubble_index = np.random.randint(
-                        0, speech_bubbles_len)
-                    bubble_image = speech_bubbles[speech_bubble_index]
-                    font = fonts[font_index]
-                    if bubble_image in no_empty_writing_areas:
-                        for area in no_empty_writing_areas[bubble_image]:
-                            if bubble_image == area["path"]:
-                                text_index = np.random.randint(0, texts_len)
-                                text_indices.append(text_index)
-                                texts.append(texts_iloc[text_index])
-                                writing_areas.append(area)
-
-                    return (bubble_image, font, texts, text_indices, writing_areas)
-
-                # Generate another bubble if the last had empty writing areas
-                for _ in range(MAX_ATTEMPS):
-                    data = select_speech_bubble()
-                    if(len(data[4]) > 0):
-                        new_speech_bubbles.append(data)
-                        break
-            new_panels.append((panel, images[image_index], new_speech_bubbles))
-        background = images[background_index] if background_index is not None else None
-        metadata_data.append((page, new_panels, background, language))
-    return metadata_data
-
-
-def create_pages_metadata(n,
-                          images,
-                          fonts,
-                          texts,
-                          speech_bubbles,
-                          speech_bubbles_writing_areas,
-                          language):
+    # Set speech_bubble with validated area
+    speech_bubbles = list(no_empty_writing_areas.keys())
+    speech_bubbles_len = len(speech_bubbles)
     images_len = len(images)
     fonts_len = len(fonts)
 
     # Get random indexes for images and fonts
-    metadata_lens = [(images_len, fonts_len)
+    metadata_lens = [(images_len, fonts_len, speech_bubbles_len)
                      for _ in range(n)]
     random_indexes = open_pool(create_inital_page_metadata, metadata_lens)
 
     preprocessed_metadata = preprocess_metadata(random_indexes, images, fonts, texts,
-                                                speech_bubbles, speech_bubbles_writing_areas,
-                                                language)
+                                                speech_bubbles, no_empty_writing_areas, language)
     return open_pool(create_single_page_metadata, preprocessed_metadata)

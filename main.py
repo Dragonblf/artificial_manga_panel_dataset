@@ -212,11 +212,12 @@ if __name__ == '__main__':
     if args.create_annotations:
         print("Creating annotations...")
         annotations = create_coco_annotations_from_segmentations()
-        print("Zipping dataset...")
+        print("Merging filenames...")
         image_paths = [os.path.join(paths.GENERATED_IMAGES_FOLDER, image["file_name"])
                        for image in annotations["images"]]
         image_paths.append(os.path.join(paths.GENERATED_FOLDER,
                                         paths.GENERATED_COCO_ANNOTATIONS_FILENAME))
+        print("Zipping dataset...")
         zip_files(image_paths, paths.GENERATED_FOLDER + "dataset.zip")
 
     if args.run_tests:
