@@ -1,5 +1,5 @@
 from zipfile import ZipFile
-from .multiprocessing import open_pool
+from tqdm import tqdm
 
 
 def unzip_file(from_path, to_path):
@@ -10,15 +10,11 @@ def unzip_file(from_path, to_path):
         f.extractall(to_path)
 
 
-def _write_zip(data):
-    path, to_path = data
-    with ZipFile(to_path, 'w') as f:
-        f.write(path)
-
-
 def zip_files(paths, to_path):
     """
     Compress files to zip file
     """
-    files = [(path, to_path) for path in paths]
-    open_pool(_write_zip, files)
+    with ZipFile(to_path, 'w') as f:
+        for path in tqdm(paths):
+            f.write(path)
+        f.close()

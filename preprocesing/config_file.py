@@ -9,7 +9,7 @@ page_size = (page_width, page_height)
 output_format = ".jpg"
 metadata_format = ".json"
 
-compression_quality = 72
+compression_quality = 50
 cv2_compression = [int(cv2.IMWRITE_JPEG_QUALITY), compression_quality]
 pil_compression = "JPEG"
 

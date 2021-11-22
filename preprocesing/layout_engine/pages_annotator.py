@@ -102,6 +102,24 @@ def generate_single_annotations(filename, image_counter, annotations_counter):
     return (images, annotations, image_counter, annotations_counter)
 
 
+def remove_unused_images(coco_json):
+    used_images = []
+    images = []
+
+    for annotation in coco_json['annotations']:
+        image_id = annotation['image_id']
+        if not image_id in used_images:
+            used_images.append(image_id)
+
+    for image in coco_json['images']:
+        image_id = image['id']
+        if image_id in used_images:
+            images.append(image)
+
+    coco_json['images'] = images
+    return coco_json
+
+
 def create_coco_annotations_from_segmentations():
     segmented_folder = paths.GENERATED_SEGMENTED_FOLDER
     folders = os.listdir(segmented_folder)
@@ -121,7 +139,7 @@ def create_coco_annotations_from_segmentations():
         annotations_counter = data[3]
     pool.close()
 
-    coco = {
+    coco_json = {
         "licenses": [
             {
                 "id": 0,
@@ -153,8 +171,11 @@ def create_coco_annotations_from_segmentations():
         "annotations": annotations
     }
 
+    print("Removing unused images...")
+    coco_json = remove_unused_images(coco_json)
+
     print("Saving COCO annotations...")
-    save_json(coco, paths.GENERATED_FOLDER +
+    save_json(coco_json, paths.GENERATED_FOLDER +
               paths.GENERATED_COCO_ANNOTATIONS_FILENAME)
 
-    return coco
+    return coco_json
