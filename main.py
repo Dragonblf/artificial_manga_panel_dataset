@@ -100,7 +100,7 @@ if __name__ == '__main__':
         download_and_extract_jesc()
         convert_jesc_to_dataframe()
 
-    # Font dataset
+    # Font download
     if args.download_fonts:
         get_font_links()
 
