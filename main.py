@@ -100,25 +100,29 @@ if __name__ == '__main__':
     if args.download_fonts:
         get_font_links()
 
-    # Font verification
+    # Font extraction
     if args.extract_fonts:
         extract_fonts()
         move_fonts()
 
+    # Font verification
     if args.verify_fonts:
         verify_font_files()
 
+    # Calculation of writeable areas in speech bubbles
     if args.calculate_writing_areas:
         create_speech_bubbles_writing_areas(save=args.segmented)
 
-    # Download and convert image from Kaggle
+    # Download image dataset from Kaggle
     if args.download_images:
         download_db_illustrations()
         convert_images_to_bw()
 
+    # Converted image dataset into black white
     if args.convert_images:
         convert_images_to_bw()
 
+    # Split speech bubbles
     if args.split_speech_bubbles:
         paths.makeFolders([paths.DATASET_IMAGES_UNSPLITTED_SPEECH_BUBBLES_SINGLE_FOLDER,
                            paths.DATASET_IMAGES_UNSPLITTED_SPEECH_BUBBLES_MULTIPLE_FOLDER,
@@ -209,6 +213,7 @@ if __name__ == '__main__':
             print("Segmentanting images...")
             segment_pages(pages)
 
+    # Create annotations
     if args.create_annotations:
         print("Creating annotations...")
         annotations = create_coco_annotations_from_segmentations()
@@ -220,6 +225,7 @@ if __name__ == '__main__':
         print("Zipping dataset...")
         zip_files(image_paths, paths.GENERATED_FOLDER + "dataset.zip")
 
+    # Run tests
     if args.run_tests:
         pytest.main([
             "tests/unit_tests/",
