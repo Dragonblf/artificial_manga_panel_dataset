@@ -2,6 +2,7 @@ import os
 import concurrent.futures
 import dask.dataframe as dd
 import itertools
+import shutil
 from fontTools.ttLib import TTFont, TTLibError
 from tqdm import tqdm
 from . import config_file as cfg
@@ -62,10 +63,11 @@ def move_fonts():
     print("Moving fonts...")
     open_pool(move_files, font_files_and_paths)
 
-    # Clean up the folder
-    # print("Deleting unzipped and zipped folders...")
-    # shutil.rmtree(unzipped)
-    # shutil.rmtree(zipped)
+
+def remove_temporary_font_directories():
+    print("Deleting unzipped and zipped folders...")
+    shutil.rmtree(paths.DATASET_FONTS_ZIPPED_FOLDER)
+    shutil.rmtree(paths.DATASET_FONTS_UNZIPPED_FOLDER)
 
 
 def make_char_list(row):
