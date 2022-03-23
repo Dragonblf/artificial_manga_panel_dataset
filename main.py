@@ -7,7 +7,7 @@ from preprocesing import speech_bubble_writing_area
 
 from scraping.download_texts import download_and_extract_jesc
 from scraping.download_fonts import get_font_links
-from scraping.download_images import download_db_illustrations
+from scraping.download_images import download_db_illustrations, remove_temporary_image_directories
 
 from preprocesing.speech_bubble_writing_area import create_speech_bubbles_writing_areas
 from preprocesing.text_dataset_format_changer import convert_jesc_to_dataframe
@@ -52,9 +52,9 @@ if __name__ == '__main__':
                         action="store_true",
                         help="Verify fonts for minimum coverage from")
                         
-    parser.add_argument("--remove_temp_directories", "-rtd",
+    parser.add_argument("--remove_temp_data", "-rtd",
                         action="store_true",
-                        help="Removes the temporary needed directories to preprocess everything")
+                        help="Removes the temporary needed data to preprocess everything")
 
     parser.add_argument("--convert_images", "-ci",
                         action="store_true",
@@ -137,9 +137,10 @@ if __name__ == '__main__':
         split_speech_bubbles(
             paths.DATASET_IMAGES_UNSPLITTED_SPEECH_BUBBLES_MULTIPLE_FOLDER, multiple=True)
     
-    # Clean temporary directories
-    if args.remove_temp_directories:
+    # Remove temporary data
+    if args.remove_temp_data:
         remove_temporary_font_directories()
+        remove_temporary_image_directories()
 
     # Combines the above in case of small size
     if args.generate_pages is not None:
