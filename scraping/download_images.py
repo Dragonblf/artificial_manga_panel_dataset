@@ -40,8 +40,10 @@ def download_db_illustrations():
 
 
 def remove_temporary_image_directories():
-    print("Deleting raw image folder...")
+    print("Deleting temporary image folders...")
     shutil.rmtree(paths.DATASET_IMAGES_RAW_FOLDER)
+    shutil.rmtree(paths.DATASET_IMAGES_UNSPLITTED_SPEECH_BUBBLES_SINGLE_FOLDER)
+    shutil.rmtree(paths.DATASET_IMAGES_UNSPLITTED_SPEECH_BUBBLES_MULTIPLE_FOLDER)
 
 
 def download_speech_bubbles():
