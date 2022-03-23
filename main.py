@@ -118,7 +118,7 @@ if __name__ == '__main__':
         download_db_illustrations()
         convert_images_to_bw()
 
-    # Converted image dataset into black white
+    # Convert image dataset into grayscale
     if args.convert_images:
         convert_images_to_bw()
 
