@@ -1,5 +1,6 @@
 import os
 import paths
+import shutil
 
 
 def download_db_illustrations():
@@ -13,7 +14,7 @@ def download_db_illustrations():
                and add your kaggle credentials")
         return
 
-    zip_file = paths.DATASET_IMAGES_FOLDER + "tagged-anime-illustrations.zip"
+    zip_file = paths.DATASET_IMAGES_RAW_FOLDER + "tagged-anime-illustrations.zip"
     if not os.path.isfile(zip_file):
         os.environ['KAGGLE_CONFIG_DIR'] = "config/"
 
@@ -23,19 +24,24 @@ def download_db_illustrations():
 
         dataset = "mylesoneill/tagged-anime-illustrations"
         api.dataset_download_files(dataset,
-                                   path=paths.DATASET_IMAGES_FOLDER,
+                                   path=paths.DATASET_IMAGES_RAW_FOLDER,
                                    quiet=False,
                                    unzip=False
                                    )
 
     print("Finished downloading now unzipping")
-    output_dir = paths.DATASET_IMAGES_DANBOORU_IMAGES_FOLDER
+    output_dir = paths.DATASET_IMAGES_DANBOORU_COLORED_IMAGES_FOLDER
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
     os.system("unzip -o "+zip_file + " -d "+output_dir)
     print("Finished unzipping")
+
+
+def remove_temporary_image_directories():
+    print("Deleting raw image folder...")
+    shutil.rmtree(paths.DATASET_IMAGES_RAW_FOLDER)
 
 
 def download_speech_bubbles():

@@ -17,8 +17,15 @@ def convert_single_image(image_path):
     """
     img = Image.open(image_path)
     bw_img = img.convert("L")
-    filename = image_path.split("/")[-1]
-    bw_img.save(paths.DATASET_IMAGES_FILES_FOLDER + filename, "JPEG")
+    savePath = image_path.replace(
+        paths.DATASET_IMAGES_DANBOORU_COLORED_IMAGES_FOLDER, 
+        paths.DATASET_IMAGES_DANBOORU_BLACK_WHITE_IMAGES_FOLDER)
+
+    newDirectory = os.sep.join(savePath.split(os.sep)[:-1])
+    if not os.path.exists(newDirectory):
+        os.makedirs(newDirectory)
+
+    bw_img.save(savePath, "JPEG")
 
 
 def convert_images_to_bw():
