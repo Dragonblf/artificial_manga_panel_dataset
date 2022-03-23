@@ -25,7 +25,8 @@ def extract_fonts():
     filepaths = [(paths.DATASET_FONTS_ZIPPED_FOLDER + filename, unzipped)
                  for filename in files]
 
-    open_pool(lambda path: unzip_file(path[0], path[1]), filepaths)
+    for path in filepaths:
+        unzip_file(path[0], path[1])
 
 
 def move_files(paths):
