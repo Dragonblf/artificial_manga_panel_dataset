@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 import pandas as pd
 import os
 import paths
+from glob2 import glob
 from preprocesing import speech_bubble_writing_area
 
 from scraping.download_texts import download_and_extract_jesc
@@ -150,7 +151,6 @@ if __name__ == '__main__':
                             str(paths.LANGUAGES_MODE_AVAILABLE))
 
         n = args.generate_pages[0]  # number of pages
-        images_folder = paths.DATASET_IMAGES_FILES_FOLDER
         bubbles_folder = paths.DATASET_IMAGES_SPEECH_BUBBLES_FOLDER
         generated_images_folder = paths.GENERATED_IMAGES_FOLDER
         generated_metadata_folder = paths.GENERATED_METADATA_FOLDER
@@ -158,9 +158,7 @@ if __name__ == '__main__':
         print("Loading texts in " + language + "...")
         texts = pd.read_parquet(
             paths.DATASET_TEXT_JESC_DIALOGUES_FOLDER)
-        images = os.listdir(images_folder)
-        images = [images_folder + filename
-                  for filename in images]
+        images = glob(os.path.join(paths.DATASET_IMAGES_DANBOORU_BLACK_WHITE_IMAGES_FOLDER, "**", "*.jpg"))
         speech_bubbles = os.listdir(bubbles_folder)
         speech_bubbles = [bubbles_folder + filename
                           for filename in speech_bubbles]
