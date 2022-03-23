@@ -1,5 +1,6 @@
 import os
 import cv2
+from glob2 import glob
 from tqdm import tqdm
 from PIL import Image
 import numpy as np
@@ -26,15 +27,8 @@ def convert_images_to_bw():
     illustration images to black and white
     """
     print("Converting images to black and white...")
-    image_folders = os.listdir(paths.DATASET_IMAGES_DANBOORU_IMAGES_FOLDER)
-    for folder in image_folders:
-        folder_path = paths.DATASET_IMAGES_DANBOORU_IMAGES_FOLDER + folder + "/"
-        if os.path.isdir(folder_path):
-            image_paths = [folder_path + image
-                           for image in os.listdir(folder_path)
-                           if image.endswith(".jpg")]
-
-            open_pool(convert_single_image, image_paths)
+    image_paths = glob(os.path.join(paths.DATASET_IMAGES_DANBOORU_IMAGES_FOLDER, "**", "*.jpg"))
+    open_pool(convert_single_image, image_paths)
 
 
 def fill_speech_bubble(img, contours):
