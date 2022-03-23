@@ -6,7 +6,7 @@ import paths
 
 preview_page_file = paths.DATASET_FONTS_FOLDER + "browse_links.txt"
 font_links_file = paths.DATASET_FONTS_FOLDER + "font_links.txt"
-font_file_raw_downloads = paths.DATASET_FONTS_DOWNLOADS_FOLDER
+font_file_raw_downloads = paths.DATASET_FONTS_ZIPPED_FOLDER
 
 
 def get_browse_page_links():
