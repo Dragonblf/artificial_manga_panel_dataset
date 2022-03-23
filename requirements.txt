@@ -8,7 +8,6 @@ jupyterlab==3.0.14
 fonttools==4.22.1
 Pillow==8.4.0
 dvc==2.0.18
-spicy==1.6.2
 pyclipper==1.2.1
 kaggle==1.5.12
 dvc[gs]
