@@ -120,7 +120,6 @@ if __name__ == '__main__':
     # Download image dataset from Kaggle
     if args.download_images:
         download_db_illustrations()
-        convert_images_to_bw()
 
     # Convert image dataset into grayscale
     if args.convert_images:
