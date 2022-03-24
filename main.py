@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--create_annotations", "-ca",
                         action="store_true", default=False,
-                        help="Creates annotations for every generated page. Only works in combination with segmentation")
+                        help="Creates annotations for every generated page")
 
     parser.add_argument("--dry", action="store_true", default=False)
 
@@ -234,7 +234,7 @@ if __name__ == '__main__':
             segment_pages(pages)
 
     # Create annotations
-    if args.create_annotations and args.segmented:
+    if args.create_annotations and os.path.isdir(paths.GENERATED_SEGMENTED_FOLDER):
         print("Creating annotations...")
         annotations = create_coco_annotations_from_segmentations()
 
