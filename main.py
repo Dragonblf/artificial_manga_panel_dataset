@@ -88,7 +88,8 @@ if __name__ == '__main__':
                         action="store_true", default=False, help="Generate pages in color")
 
     parser.add_argument("--segmented", "-s",
-                        action="store_true", default=False)
+                        action="store_true", default=False,
+                        help="Generate segmentation files for every generated page. Only works in combination with black and white pages")
 
     parser.add_argument("--create_annotations", "-ca",
                         action="store_true", default=False)
@@ -227,7 +228,7 @@ if __name__ == '__main__':
             print("Rendering images in color...")
             render_pages_colored(pages, dry=args.dry)
 
-        if args.segmented:
+        if args.segmented and args.generate_black_and_white_pages:
             print("Segmentanting images...")
             segment_pages(pages)
 

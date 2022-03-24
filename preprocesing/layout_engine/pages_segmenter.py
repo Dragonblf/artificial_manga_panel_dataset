@@ -96,7 +96,7 @@ def create_segmented_page(name: str):
     """
 
     output = cfg.output_format
-    image_name = name + output
+    image_name = name + "_BW" + output
     image_file = paths.GENERATED_IMAGES_FOLDER + image_name
     metadata_file = paths.GENERATED_METADATA_FOLDER + name + cfg.metadata_format
 
