@@ -1,4 +1,3 @@
-
 import cv2
 import numpy as np
 import paths
@@ -62,7 +61,7 @@ def generate_single_annotations(filename, image_counter, annotations_counter):
     if os.path.isdir(folder):
         annotations_file = os.path.join(
             folder, paths.GENERATED_ANNOTATIONS_FILENAME)
-        image_file_name = filename + cfg.output_format
+        image_file_name = filename + "_BW" + cfg.output_format
         image_file = os.path.join(
             paths.GENERATED_IMAGES_FOLDER, image_file_name)
         if os.path.exists(annotations_file) and os.path.exists(image_file):
