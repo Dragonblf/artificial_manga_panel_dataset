@@ -92,7 +92,8 @@ if __name__ == '__main__':
                         help="Generate segmentation files for every generated page. Only works in combination with black and white pages")
 
     parser.add_argument("--create_annotations", "-ca",
-                        action="store_true", default=False)
+                        action="store_true", default=False,
+                        help="Creates annotations for every generated page. Only works in combination with segmentation")
 
     parser.add_argument("--dry", action="store_true", default=False)
 
@@ -233,7 +234,7 @@ if __name__ == '__main__':
             segment_pages(pages)
 
     # Create annotations
-    if args.create_annotations:
+    if args.create_annotations and args.segmented:
         print("Creating annotations...")
         annotations = create_coco_annotations_from_segmentations()
         print("Merging filenames...")
