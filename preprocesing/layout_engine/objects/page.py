@@ -2,7 +2,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 import json
 import uuid
-from ..helpers import crop_image_only_outside, get_leaf_panels
+from ..helpers import crop_image_only_outside_rows_columns, crop_image_only_outside, get_leaf_panels
 from ... import config_file as cfg
 from .panel import Panel
 from .speech_bubble import SpeechBubble
@@ -223,6 +223,102 @@ class Page(Panel):
                 crop_array = crop_image_only_outside(img_array)
 
                 img = Image.fromarray(crop_array)
+
+                # Resize it to the page's size as a simple
+                # way to crop differnt parts of it
+
+                # TODO: Figure out how to do different types of
+                # image crops for smaller panels
+                w_rev_ratio = cfg.page_width/img.size[0]
+                h_rev_ratio = cfg.page_height/img.size[1]
+
+                img = img.resize(
+                    (round(img.size[0]*w_rev_ratio),
+                     round(img.size[1]*h_rev_ratio))
+                )
+
+                # Create a mask for the panel illustration
+                mask = Image.new("L", cfg.page_size, 0)
+                draw_mask = ImageDraw.Draw(mask)
+
+                # On the mask draw and therefore cut out the panel's
+                # area so that the illustration can be fit into
+                # the page itself
+                draw_mask.polygon(rect, fill=255)
+
+            # Draw outline
+            draw_rect.line(rect, fill="black", width=cfg.boundary_width)
+
+            # Paste illustration onto the page
+            if panel.image is not None:
+                page_img.paste(img, (0, 0), mask)
+
+        # If it's a single panel page
+        if self.num_panels < 2:
+            leaf_children.append(self)
+
+        # Render bubbles
+        for panel in leaf_children:
+            if len(panel.speech_bubbles) < 1:
+                continue
+            # For each bubble
+            for sb in panel.speech_bubbles:
+                bubble, location = sb.render()
+                page_img.paste(bubble, location, bubble)
+
+        if show:
+            page_img.show()
+        else:
+            return page_img
+
+    def renderColored(self, show=False):
+        """
+        A function to render this page to an image
+
+        :param show: Whether to return this image or to show it
+
+        :type show: bool, optional
+        """
+
+        leaf_children = []
+        if self.num_panels > 1:
+            # Get all the panels to be rendered
+            if len(self.leaf_children) < 1:
+                get_leaf_panels(self, leaf_children)
+            else:
+                leaf_children = self.leaf_children
+
+        W = cfg.page_width
+        H = cfg.page_height
+
+        # Create a new blank image
+        page_img = Image.new(size=(W, H), mode="RGBA", color="white")
+        draw_rect = ImageDraw.Draw(page_img)
+
+        # Set background if needed
+        if self.background is not None:
+            bg = Image.open(self.background).convert("L")
+            img_array = np.asarray(bg)
+            crop_array = crop_image_only_outside(img_array)
+            bg = Image.fromarray(crop_array)
+            bg = bg.resize((W, H))
+            page_img.paste(bg, (0, 0))
+
+        # Render panels
+        for panel in leaf_children:
+
+            # Panel coords
+            rect = panel.get_polygon()
+
+            # Open the illustration to put within panel
+            if panel.image is not None:
+                imgBW = Image.open(panel.image)
+                imgColored = Image.open(panel.get_colored_image())
+
+                # Clean it up by cropping the black areas
+                img_array = np.asarray(imgBW)
+                col_start, col_end, row_start, row_end = crop_image_only_outside_rows_columns(img_array)
+                img = imgColored.crop((col_start, row_start, col_end, row_end))
 
                 # Resize it to the page's size as a simple
                 # way to crop differnt parts of it

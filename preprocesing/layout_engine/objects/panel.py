@@ -1,6 +1,6 @@
-
 from ... import config_file as cfg
 from .speech_bubble import SpeechBubble
+import os
 
 
 class Panel(object):
@@ -178,6 +178,9 @@ class Panel(object):
         :rtype: Panel
         """
         return self.children[idx]
+
+    def get_colored_image(self):
+        return self.image.replace(f"{os.sep}bw{os.sep}", f"{os.sep}colored{os.sep}")
 
     def dump_data(self):
         """

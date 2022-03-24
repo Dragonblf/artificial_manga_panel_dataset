@@ -18,13 +18,24 @@ def create_page(data):
     """
     try:
         page, dry = data
-        filename = paths.GENERATED_IMAGES_FOLDER + page.name + cfg.output_format
-        if not os.path.isfile(filename) and not dry:
+        filenameBW = paths.GENERATED_IMAGES_FOLDER + page.name + "_BW" + cfg.output_format
+        if not os.path.isfile(filenameBW) and not dry:
             img = page.render(show=False)
-            img.convert("L").save(filename, cfg.pil_compression,
+            img.convert("L").save(filenameBW, cfg.pil_compression,
                                   optimize=True, quality=cfg.compression_quality)
     except:
-        print("We couldn't render " + filename)
+        print("We couldn't render " + filenameBW)
+    
+    try:
+        page, dry = data
+        filenameColored = paths.GENERATED_IMAGES_FOLDER + page.name + "_Colored" + cfg.output_format
+        if not os.path.isfile(filenameColored) and not dry:
+            img = page.renderColored(show=False)
+            img.convert("RGB").save(filenameColored, cfg.pil_compression,
+                                    optimize=True, quality=cfg.compression_quality)
+    except:
+        print("We couldn't render " + filenameColored)
+                                  
 
 
 def render_pages(pages, dry=False):

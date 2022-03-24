@@ -1,6 +1,36 @@
 import numpy as np
 
 
+def crop_image_only_outside_rows_columns(img, tol=0):
+    """
+    Returns the rows and columns to crop out the
+    pixels which are black in the image
+
+    :param img: image to be cropped
+
+    :type img: PIL.Image
+
+    :param tol: tollerance level, defaults to 0
+
+    :type tol: int, optional
+
+    :return: Rows and columns to crop in image
+
+    :rtype: tuple
+    """
+    # img is 2D image data
+    # tol  is tolerance
+    mask = img > tol
+    m, n = img.shape
+
+    mask0, mask1 = mask.any(0), mask.any(1)
+
+    col_start, col_end = mask0.argmax(), n-mask0[::-1].argmax()
+    row_start, row_end = mask1.argmax(), m-mask1[::-1].argmax()
+
+    return (col_start, col_end, row_start, row_end)
+
+
 def crop_image_only_outside(img, tol=0):
     """
     Crop the outside of the image where
@@ -18,18 +48,9 @@ def crop_image_only_outside(img, tol=0):
 
     :rtype: PIL.Image
     """
-    # img is 2D image data
-    # tol  is tolerance
-    mask = img > tol
-    m, n = img.shape
-
-    mask0, mask1 = mask.any(0), mask.any(1)
-
-    col_start, col_end = mask0.argmax(), n-mask0[::-1].argmax()
-    row_start, row_end = mask1.argmax(), m-mask1[::-1].argmax()
-
+    col_start, col_end, row_start, row_end = crop_image_only_outside_rows_columns(img, tol)
     return img[row_start:row_end, col_start:col_end]
-
+    
 
 def invert_for_next(current):
     """
