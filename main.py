@@ -14,7 +14,7 @@ from preprocesing.speech_bubble_writing_area import create_speech_bubbles_writin
 from preprocesing.text_dataset_format_changer import convert_jesc_to_dataframe
 from preprocesing.extract_and_verify_fonts import extract_fonts, move_fonts, verify_font_files, remove_temporary_font_directories
 from preprocesing.convert_images import convert_images_to_bw, split_speech_bubbles
-from preprocesing.layout_engine.pages_renderer import render_pages
+from preprocesing.layout_engine.pages_renderer import render_pages_bw, render_pages_colored
 from preprocesing.layout_engine.pages_segmenter import segment_pages
 from preprocesing.layout_engine.page_creator.create_page_metadata import create_pages_metadata
 from preprocesing.layout_engine.pages_annotator import create_coco_annotations_from_segmentations
@@ -81,6 +81,12 @@ if __name__ == '__main__':
     parser.add_argument("--generate_pages", "-gp", nargs=1,
                         type=int, help="Generate pages count")
 
+    parser.add_argument("--generate_black_and_white_pages", "-bw",
+                        action="store_true", default=False, help="Generate pages in black and white")
+
+    parser.add_argument("--generate_colored_pages", "-c",
+                        action="store_true", default=False, help="Generate pages in color")
+
     parser.add_argument("--segmented", "-s",
                         action="store_true", default=False)
 
@@ -144,7 +150,7 @@ if __name__ == '__main__':
         remove_temporary_image_directories()
 
     # Combines the above in case of small size
-    if args.generate_pages is not None:
+    if args.generate_pages is not None and (args.generate_black_and_white_pages or args.generate_colored_pages):
         language = args.language
         if not language in paths.LANGUAGES_MODE_AVAILABLE:
             raise Exception("That language mode is not avaible. Available " +
@@ -213,8 +219,14 @@ if __name__ == '__main__':
                                       speech_bubbles_writing_areas,
                                       language)
 
-        print("Rendering images...")
-        render_pages(pages, dry=args.dry)
+        if args.generate_black_and_white_pages:
+            print("Rendering images in black and white...")
+            render_pages_bw(pages, dry=args.dry)
+
+        if args.generate_colored_pages: 
+            print("Rendering images in color...")
+            render_pages_colored(pages, dry=args.dry)
+
         if args.segmented:
             print("Segmentanting images...")
             segment_pages(pages)
