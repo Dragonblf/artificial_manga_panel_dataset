@@ -1,7 +1,9 @@
+from glob2 import glob
+from PIL import Image
+import numpy as np
 import os
 import paths
 import shutil
-
 
 def download_db_illustrations():
     """
@@ -37,6 +39,14 @@ def download_db_illustrations():
 
     os.system("unzip -o "+zip_file + " -d "+output_dir)
     print("Finished unzipping")
+
+    for ext in ["jpg", "jpeg"]:
+        for p in glob(os.path.join(output_dir, "**", f"*.{ext}")):
+            img = Image.open(p)
+            arr = np.asarray(img)
+            if len(arr.shape) < 3:
+                os.remove(p)
+    print("Finished removing of black and white images")
 
 
 def remove_temporary_image_directories():
